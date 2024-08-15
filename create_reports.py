@@ -1,14 +1,4 @@
-import rospy
-import time
-
-from enum import Enum
-
-from messages.msg import Critical_report
-from messages.msg import Injury_report
-from messages.msg import Prediction
-from messages.msg import Vitals_report
-
-TEAM_NAME = "coordinated robotics"
+#!/usr/bin/env python3
 
 #   +------------------------------+
 #   | reference for yolo classes   |
@@ -26,12 +16,24 @@ TEAM_NAME = "coordinated robotics"
 #   | UPPER_EXT_WOUND      |   5   |
 #   +----------------------+-------+
 
+# imports
+import rospy
+import time
+from enum import Enum
+from messages.msg import Critical_report
+from messages.msg import Injury_report
+from messages.msg import Prediction
+from messages.msg import Vitals_report
+
+# constants
+TEAM_NAME = "coordinated robotics"
+
 # creating ROS topics
 critical_report_pub   = rospy.Publisher('critical_report', Critical_report, queue_size=10)
 vitals_report_pub     = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
 injury_report_pub     = rospy.Publisher('injury_report', Injury_report, queue_size=10)
 
-
+# this function handles the yolo predictions
 def handle_yolo_prediction(message):
     for prediction in message.prediction_elements:
         print(prediction.injury_class)
