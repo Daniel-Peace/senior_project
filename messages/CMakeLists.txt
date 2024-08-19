@@ -21,6 +21,7 @@ add_message_files(
   Vitals.msg
   Vitals_report.msg
   Vitals_report_response.msg
+  Timer_status.msg
 )
 
 include_directories(

@@ -19,7 +19,6 @@
 # imports
 import rospy
 import time
-from enum import Enum
 from messages.msg import Critical_report
 from messages.msg import Injury_report
 from messages.msg import Prediction
