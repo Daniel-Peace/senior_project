@@ -17,7 +17,7 @@ RUN_WITH_CAMERA = 0
 RUN_WITH_PATH   = 1
 
 # creating publisher
-publisher = rospy.Publisher('yoloV8_prediction', Prediction, queue_size=10)
+publisher = rospy.Publisher('model_1_predictions', Prediction, queue_size=10)
 
 # initializing yoloV8 model
 model = YOLO("./yoloV8_weights/best.pt")
@@ -32,21 +32,22 @@ def publish_results(results):
         combined_data = [{"class": int(cls), "confidence": float(conf)} for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy())]
         json.dumps(combined_data)
         print(combined_data)
+        print("---------------------------------------------------------------------")
 
     # iterating over predictions to create ROS message
     prediction = Prediction()
     for item in combined_data:
         prediction_element = Prediction_element()
-        prediction_element.injury_class = item['class']
-        prediction_element.confidence = item['confidence']
+        prediction_element.affliction_class = item['class']
+        prediction_element.affliction_value = item['confidence']
         prediction.prediction_elements.append(prediction_element)
 
+    # printing ROS message for reference
     print(prediction)
+    print("---------------------------------------------------------------------")
 
     # Publishing ROS message
     publisher.publish(prediction)
-
-
 
 # runs yoloV8 on an image published to the "usb_cam/image_raw"
 def run_predictor_with_camera(raw_image):
@@ -56,6 +57,8 @@ def run_predictor_with_camera(raw_image):
 
     # converting cv image to numpy array
     np_image = np.array(cv_image)
+
+    print("---------------------------------------------------------------------")
 
     # running model on the numpy array
     results = model.predict(np_image)
@@ -71,9 +74,12 @@ def run_predictor_with_path():
         # getting image path from user
         image_path = input("Enter a path to an image:\n\u001b[34m-> \u001b[0m")
 
+        print("---------------------------------------------------------------------")
+
         # check if the user chose to quit
         if image_path == 'q' or image_path == 'Q':
             print("Exiting...")
+            print("---------------------------------------------------------------------")
             break
 
         # opening image
@@ -91,16 +97,14 @@ def run_predictor_with_path():
 def setup_predictor(choice):
 
     # creating ROS node
-    rospy.init_node('yoloV8_node', anonymous=True)
-
-    print("--------------------------------------------------------------------------")
+    rospy.init_node('model_1', anonymous=True)
 
     # checking which mode to run the predictor in
     if choice == RUN_WITH_CAMERA:
         # registering callback functions
         rospy.Subscriber('usb_cam/image_raw', Image, run_predictor_with_camera)
     else:
-        # running predictor on image paths 
+        # running predictor on image paths
         run_predictor_with_path()
         return
 
@@ -122,13 +126,17 @@ if __name__ == "__main__":
 
         # checking user's choice
         if choice == 'a':
+            print("---------------------------------------------------------------------")
             setup_predictor(RUN_WITH_CAMERA)
             break
         elif choice == 'b':
+            print("---------------------------------------------------------------------")
             setup_predictor(RUN_WITH_PATH)
             break
         elif choice == 'q' or choice == 'Q':
+            print("---------------------------------------------------------------------")
             print("Exiting...")
+            print("---------------------------------------------------------------------")
             break
         else:
             print("\u001b[34m-> \u001b[0m \u001b[31mInvalid choice...\u001b[0m")

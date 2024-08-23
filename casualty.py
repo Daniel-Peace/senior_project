@@ -1,13 +1,22 @@
-class Casualty_types:
-    # critical options
+import rospy
+from messages.msg import Critical_report
+from messages.msg import Vitals_report
+from messages.msg import Injury_report
+
+class Casualty:
+    # constants
+    TEAM_NAME   = "coordinated robotics"
+    SYSTEM      = "JOE"
+
+    # critical afflication options
     SEVERE_HEMORRHAGE       = 0
     RESPIRATORY_DISTRESS    = 1
 
-    # vitals options
+    # vitals afflication options
     HEART_RATE              = 2
     RESPIRATORY_RATE        = 3
 
-    # injury options
+    # injury afflication options
     TRAUMA_HEAD             = 4
     TRAUMA_TORSO            = 5
     TRAUMA_LOWER_EXT        = 6
@@ -16,34 +25,100 @@ class Casualty_types:
     ALERTNESS_VERBAL        = 9
     ALERTNESS_MOTOR         = 10
 
-class Casualtys_status:
-    # # default constructor
-    # def __init__(self) -> None:
-    #     self.april_tag              = -1
-    #     self.severe_hemorrhage      = -1
-    #     self.respiratory_distress   = -1
-    #     self.heart_rate             = -1
-    #     self.respiratory_rate       = -1
-    #     self.trauma_head            = -1
-    #     self.trauma_torso           = -1
-    #     self.trauma_lower_ext       = -1
-    #     self.trauma_upper_ext       = -1
-    #     self.alertness_ocular       = -1
-    #     self.alertness_verbal       = -1
-    #     self.alertness_motor        = -1
-
-
-    # constructor with all arguments passed in
+    # constructor
     def __init__(self, april_tag = -1, severe_hemorrhage = -1, respiratory_distress = -1, heart_rate = -1, respiratory_rate = -1, trauma_head = -1, trauma_torso = -1, trauma_lower_ext = -1, trauma_upper_ext = -1, alertness_ocular = -1, alertness_verbal = -1, alertness_motor = -1) -> None:
-        self.april_tag              = april_tag
+        self.apriltag               = april_tag
+
+        # critical
         self.severe_hemorrhage      = severe_hemorrhage
         self.respiratory_distress   = respiratory_distress
+
+        # vitals
         self.heart_rate             = heart_rate
         self.respiratory_rate       = respiratory_rate
+
+        # injury
         self.trauma_head            = trauma_head
         self.trauma_torso           = trauma_torso
         self.trauma_lower_ext       = trauma_lower_ext
-        self.trauma_lupper_ext      = trauma_upper_ext
+        self.trauma_upper_ext       = trauma_upper_ext
         self.alertness_ocular       = alertness_ocular
-        self.alertness_verabl       = alertness_verbal
+        self.alertness_verbal       = alertness_verbal
         self.alertness_motor        = alertness_motor
+
+    # resets all members' values to -1
+    def reset(self):
+        self.april_tag              = -1
+        self.severe_hemorrhage      = -1
+        self.respiratory_distress   = -1
+        self.heart_rate             = -1
+        self.respiratory_rate       = -1
+        self.trauma_head            = -1
+        self.trauma_torso           = -1
+        self.trauma_lower_ext       = -1
+        self.trauma_lupper_ext      = -1
+        self.alertness_ocular       = -1
+        self.alertness_verabl       = -1
+        self.alertness_motor        = -1
+
+    # publishers all members to respective topics
+    def publish_reports(self):
+        self.publish_critical_reports()
+        self.publish_vitals_reprots()
+        self.publish_injury_reports()
+
+    # publishes critical reports
+    def publish_critical_reports(self):
+        publisher           = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
+        report              = Critical_report()
+        report              = Critical_report()
+        report.casualty_id  = self.TEAM_NAME
+        report.system       = self.SYSTEM
+        report.type         = self.SEVERE_HEMORRHAGE
+        report.value        = self.severe_hemorrhage
+        publisher.publish(report)
+        report.type         = self.RESPIRATORY_DISTRESS
+        report.value        = self.respiratory_distress
+        publisher.publish(report)
+
+    # publishes vitals reports
+    def publish_vitals_reprots(self):
+        publisher = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
+        report              = Vitals_report()
+        report.team         = self.TEAM_NAME
+        report.system       = self.SYSTEM
+        report.type         = self.HEART_RATE
+        report.value        = self.heart_rate
+        publisher.publish(report)
+        report.type         = self.RESPIRATORY_RATE
+        report.value        = self.respiratory_rate
+        publisher.publish(report)
+
+    # publishes injury reports
+    def publish_injury_reports(self):
+        publisher           = rospy.Publisher('injury_report', Injury_report, queue_size=10)
+        report              = Injury_report()
+        report.casualty_id  = self.apriltag
+        report.team         = self.TEAM_NAME
+        report.system       = self.SYSTEM
+        report.type         = self.TRAUMA_HEAD
+        report.value        = self.trauma_head
+        publisher.publish(report)
+        report.type         = self.TRAUMA_TORSO
+        report.value        = self.trauma_torso
+        publisher.publish(report)
+        report.type         = self.TRAUMA_LOWER_EXT
+        report.value        = self.trauma_lower_ext
+        publisher.publish(report)
+        report.type         = self.TRAUMA_UPPER_EXT
+        report.value        = self.trauma_upper_ext
+        publisher.publish(report)
+        report.type         = self.ALERTNESS_OCULAR
+        report.value        = self.alertness_ocular
+        publisher.publish(report)
+        report.type         = self.ALERTNESS_VERBAL
+        report.value        = self.alertness_verbal
+        publisher.publish(report)
+        report.type         = self.ALERTNESS_MOTOR
+        report.value        = self.alertness_motor
+        publisher.publish(report)

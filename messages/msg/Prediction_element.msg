@@ -1,2 +1,2 @@
-int32   injury_class
-float64 confidence
+int32   affliction_class
+float64 affliction_value

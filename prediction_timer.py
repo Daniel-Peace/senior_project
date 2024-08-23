@@ -9,7 +9,7 @@ TIMER_LENGTH = 10
 # creating ROS topic and publisher
 publisher = rospy.Publisher('prediction_timer_status', Timer_status, queue_size=10)
 
-def handle_timer():
+def timer():
     # creating Timer_status message to indicate timer has started
     timer_status = Timer_status()
     timer_status.timer_status = True
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
         # validating user input
         if choice.upper() == 'S':
-            handle_timer()
+            timer()
         elif choice.upper() == 'Q':
             print("system: Exiting...")
             exit(0)
