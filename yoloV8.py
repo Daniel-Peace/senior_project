@@ -11,10 +11,20 @@ import json
 import rospy
 from messages.msg import Prediction
 from messages.msg import Prediction_element
+from casualty import Casualty
 
 # constants
-RUN_WITH_CAMERA = 0
-RUN_WITH_PATH   = 1
+RUN_WITH_CAMERA         = 0
+RUN_WITH_PATH           = 1
+CONFIDENCE_THRESHOLD    = 0
+
+TRAUMA_HEAD             = 0
+TRAUMA_TORSO            = 1
+TRAUMA_LOWER_EXT        = 2
+AMPUTATION_LOWER_EXT    = 3
+TRAUMA_UPPER_EXT        = 4
+AMPUTATION_UPPER_EXT    = 5
+SEVERE_HEMORRHAGE       = 6
 
 # creating publisher
 publisher = rospy.Publisher('model_1_predictions', Prediction, queue_size=10)
@@ -29,18 +39,98 @@ bridge = CvBridge()
 def publish_results(results):
     # formatting results into a json
     for result in results:
-        combined_data = [{"class": int(cls), "confidence": float(conf)} for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy())]
+        combined_data = [{"affliction_class": int(cls), "confidence": float(conf)} for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy())]
         json.dumps(combined_data)
         print(combined_data)
         print("---------------------------------------------------------------------")
 
-    # iterating over predictions to create ROS message
-    prediction = Prediction()
+    casualty = Casualty()
+
+    # converting results to casualty object
     for item in combined_data:
-        prediction_element = Prediction_element()
-        prediction_element.affliction_class = item['class']
-        prediction_element.affliction_value = item['confidence']
-        prediction.prediction_elements.append(prediction_element)
+        if item["confidence"] < CONFIDENCE_THRESHOLD:
+            # skipping values with confidence values below the threshold
+            continue
+        else:
+            if item["affliction_class"] == TRAUMA_HEAD:
+                casualty.trauma_head = 1
+            elif item["affliction_class"] == TRAUMA_TORSO:
+                casualty.trauma_torso = 1
+            elif item["affliction_class"] == TRAUMA_LOWER_EXT:
+                if casualty.trauma_lower_ext != 2:
+                    casualty.trauma_lower_ext = 1
+            elif item["affliction_class"] == AMPUTATION_LOWER_EXT:
+                casualty.trauma_lower_ext = 2
+            elif item["affliction_class"] == TRAUMA_UPPER_EXT:
+                if casualty.trauma_upper_ext != 2:
+                    casualty.trauma_upper_ext = 1
+            elif item["affliction_class"] == AMPUTATION_UPPER_EXT:
+                casualty.trauma_upper_ext = 2
+            elif item["affliction_class"] == SEVERE_HEMORRHAGE:
+                casualty.severe_hemorrhage = 1
+            else:
+                print("system: ERROR - invalid affliction class")
+
+    casualty.alertness_motor = 1
+    
+    casualty.print_self()
+
+    prediction = Prediction()
+    # prediction_element = Prediction_element()
+
+    # creating prediction element for trauma_head
+    prediction_element = Prediction_element()
+    prediction_element.affliction_class = Casualty.TRAUMA_HEAD
+    if casualty.trauma_head == -1:
+        prediction_element.affliction_value = 0
+    else:
+        prediction_element.affliction_value = casualty.trauma_head
+    prediction.prediction_elements.append(prediction_element)
+
+    # creating prediction element for trauma_torso
+    prediction_element = Prediction_element()
+    prediction_element.affliction_class = Casualty.TRAUMA_TORSO
+    if casualty.trauma_torso == -1:
+        prediction_element.affliction_value = 0
+    else:
+        prediction_element.affliction_value = casualty.trauma_torso
+    prediction.prediction_elements.append(prediction_element)
+
+    # creating prediction element for trauma_torso
+    prediction_element = Prediction_element()
+    prediction_element.affliction_class = Casualty.TRAUMA_LOWER_EXT
+    if casualty.trauma_lower_ext == -1:
+        prediction_element.affliction_value = 0
+    else:
+        prediction_element.affliction_value = casualty.trauma_lower_ext
+    prediction.prediction_elements.append(prediction_element)
+
+    # creating prediction element for trauma_torso
+    prediction_element = Prediction_element()
+    prediction_element.affliction_class = Casualty.TRAUMA_UPPER_EXT
+    if casualty.trauma_upper_ext == -1:
+        prediction_element.affliction_value = 0
+    else:
+        prediction_element.affliction_value = casualty.trauma_upper_ext
+    prediction.prediction_elements.append(prediction_element)
+
+    # creating prediction element for trauma_torso
+    prediction_element = Prediction_element()
+    prediction_element.affliction_class = Casualty.SEVERE_HEMORRHAGE
+    if casualty.severe_hemorrhage == -1:
+        prediction_element.affliction_value = 1
+    else:
+        prediction_element.affliction_value = casualty.severe_hemorrhage
+    prediction.prediction_elements.append(prediction_element)
+
+
+    # # iterating over predictions to create ROS message
+    # prediction = Prediction()
+    # for item in combined_data:
+    #     prediction_element = Prediction_element()
+    #     prediction_element.affliction_class = item['class']
+    #     prediction_element.affliction_value = item['confidence']
+    #     prediction.prediction_elements.append(prediction_element)
 
     # printing ROS message for reference
     print(prediction)

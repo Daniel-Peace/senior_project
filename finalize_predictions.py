@@ -201,7 +201,7 @@ def assign_apriltag(msg):
 
 def receive_model_0_predictions(predictions):
     for prediction in predictions:
-        if prediction.tyoe == Casualty.SEVERE_HEMORRHAGE:
+        if prediction.type == Casualty.SEVERE_HEMORRHAGE:
             model_0_casualty.severe_hemorrhage = prediction.value
         elif prediction.type == Casualty.TRAUMA_HEAD:
             model_0_casualty.trauma_head = prediction.value

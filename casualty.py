@@ -48,7 +48,7 @@ class Casualty:
 
     # resets all members' values to -1
     def reset(self):
-        self.april_tag              = -1
+        self.apriltag               = -1
         self.severe_hemorrhage      = -1
         self.respiratory_distress   = -1
         self.heart_rate             = -1
@@ -56,9 +56,9 @@ class Casualty:
         self.trauma_head            = -1
         self.trauma_torso           = -1
         self.trauma_lower_ext       = -1
-        self.trauma_lupper_ext      = -1
+        self.trauma_upper_ext      = -1
         self.alertness_ocular       = -1
-        self.alertness_verabl       = -1
+        self.alertness_verbal       = -1
         self.alertness_motor        = -1
 
     # publishers all members to respective topics
@@ -122,3 +122,21 @@ class Casualty:
         report.type         = self.ALERTNESS_MOTOR
         report.value        = self.alertness_motor
         publisher.publish(report)
+
+
+    def print_self(self):
+        print("\n---")
+        print("AprilTag:\t\t\t" + str(self.apriltag))
+        print("Severe Hemorrhage:\t\t" + str(self.severe_hemorrhage))
+        print("Respiratory Distress:\t\t" + str(self.respiratory_distress))
+        print("Heart Rate:\t\t\t" + str(self.heart_rate))
+        print("Respiratory Rate:\t\t" + str(self.respiratory_rate))
+        print("Trauma Head:\t\t\t" + str(self.trauma_head))
+        print("Trauma Torso:\t\t\t" + str(self.trauma_torso))
+        print("Trauma Lower Ext.:\t\t" + str(self.trauma_lower_ext))
+        print("Trauma Upper Ext.:\t\t" + str(self.trauma_upper_ext))
+        print("Alertness Ocular:\t\t" + str(self.alertness_ocular))
+        print("Alertness Verbal:\t\t" + str(self.alertness_verbal))
+        print("Alertness Motor:\t\t" + str(self.alertness_motor))
+        print("---")
+
