@@ -25,6 +25,19 @@ class Casualty:
     ALERTNESS_VERBAL        = 9
     ALERTNESS_MOTOR         = 10
 
+    affliction_types_strings = [
+        "severe_hemorrhage",
+        "respiratory_distress",
+        "hr",
+        "rr",
+        "trauma_head",
+        "trauma_torso",
+        "trauma_lower_ext",
+        "trauma_upper_ext",
+        "alertness_ocular",
+        "alertness_verbal",
+        "alertness_motor"]
+
     # constructor
     def __init__(self, april_tag = -1, severe_hemorrhage = -1, respiratory_distress = -1, heart_rate = -1, respiratory_rate = -1, trauma_head = -1, trauma_torso = -1, trauma_lower_ext = -1, trauma_upper_ext = -1, alertness_ocular = -1, alertness_verbal = -1, alertness_motor = -1) -> None:
         self.apriltag               = april_tag
@@ -69,63 +82,67 @@ class Casualty:
 
     # publishes critical reports
     def publish_critical_reports(self):
-        publisher           = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
+        self.print_self()
+        publisher           = rospy.Publisher('critical_report', Critical_report, queue_size=10)
         report              = Critical_report()
-        report              = Critical_report()
-        report.casualty_id  = self.TEAM_NAME
+        report.casualty_id  = self.apriltag
+        report.team         = self.TEAM_NAME
         report.system       = self.SYSTEM
-        report.type         = self.SEVERE_HEMORRHAGE
+        report.type         = self.affliction_types_strings[self.SEVERE_HEMORRHAGE]
         report.value        = self.severe_hemorrhage
         publisher.publish(report)
-        report.type         = self.RESPIRATORY_DISTRESS
+        report.type         = self.affliction_types_strings[self.RESPIRATORY_DISTRESS]
         report.value        = self.respiratory_distress
         publisher.publish(report)
 
     # publishes vitals reports
     def publish_vitals_reprots(self):
-        publisher = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
+        self.print_self()
+        publisher           = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
         report              = Vitals_report()
+        report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
         report.system       = self.SYSTEM
-        report.type         = self.HEART_RATE
+        report.type         = self.affliction_types_strings[self.HEART_RATE]
         report.value        = self.heart_rate
         publisher.publish(report)
-        report.type         = self.RESPIRATORY_RATE
+        report.type         = self.affliction_types_strings[self.RESPIRATORY_RATE]
         report.value        = self.respiratory_rate
         publisher.publish(report)
 
     # publishes injury reports
     def publish_injury_reports(self):
+        self.print_self()
         publisher           = rospy.Publisher('injury_report', Injury_report, queue_size=10)
         report              = Injury_report()
         report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
         report.system       = self.SYSTEM
-        report.type         = self.TRAUMA_HEAD
+        report.type         = self.affliction_types_strings[self.TRAUMA_HEAD]
         report.value        = self.trauma_head
+        print(report)
         publisher.publish(report)
-        report.type         = self.TRAUMA_TORSO
+        report.type         = self.affliction_types_strings[self.TRAUMA_TORSO]
         report.value        = self.trauma_torso
         publisher.publish(report)
-        report.type         = self.TRAUMA_LOWER_EXT
+        report.type         = self.affliction_types_strings[self.TRAUMA_LOWER_EXT]
         report.value        = self.trauma_lower_ext
         publisher.publish(report)
-        report.type         = self.TRAUMA_UPPER_EXT
+        report.type         = self.affliction_types_strings[self.TRAUMA_UPPER_EXT]
         report.value        = self.trauma_upper_ext
         publisher.publish(report)
-        report.type         = self.ALERTNESS_OCULAR
+        report.type         = self.affliction_types_strings[self.ALERTNESS_OCULAR]
         report.value        = self.alertness_ocular
         publisher.publish(report)
-        report.type         = self.ALERTNESS_VERBAL
+        report.type         = self.affliction_types_strings[self.ALERTNESS_VERBAL]
         report.value        = self.alertness_verbal
         publisher.publish(report)
-        report.type         = self.ALERTNESS_MOTOR
+        report.type         = self.affliction_types_strings[self.ALERTNESS_MOTOR]
         report.value        = self.alertness_motor
         publisher.publish(report)
 
-
+    # prints the members of this class
     def print_self(self):
-        print("\n---")
         print("AprilTag:\t\t\t" + str(self.apriltag))
         print("Severe Hemorrhage:\t\t" + str(self.severe_hemorrhage))
         print("Respiratory Distress:\t\t" + str(self.respiratory_distress))
@@ -138,5 +155,3 @@ class Casualty:
         print("Alertness Ocular:\t\t" + str(self.alertness_ocular))
         print("Alertness Verbal:\t\t" + str(self.alertness_verbal))
         print("Alertness Motor:\t\t" + str(self.alertness_motor))
-        print("---")
-
