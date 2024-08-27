@@ -22,7 +22,7 @@ if __name__ == "__main__":
             # getting user choice
             print("---------------------------------------------------------------------")
             choice = input("\u001b[34m -> \u001b[0m")
-            
+
 
             # validating user input
             if choice.isdigit():
@@ -36,4 +36,4 @@ if __name__ == "__main__":
                 exit(0)
             else:
                 print("---------------------------------------------------------------------")
-                system_print("Invalid choice")
+                system_print("\u001b[31mInvalid choice...\u001b[0m")
