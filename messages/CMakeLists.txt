@@ -23,6 +23,7 @@ add_message_files(
   Vitals_report_response.msg
   Timer_status.msg
   Assigned_apriltag.msg
+  Casualty_prediction.msg
 )
 
 include_directories(
