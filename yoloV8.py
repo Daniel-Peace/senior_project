@@ -1,19 +1,14 @@
-#!/usr/bin/env python3
-
 # imports
 import numpy as np
 import time
-import json
 import rospy
-from messages.msg       import Prediction
-from messages.msg       import Prediction_element
-from casualty           import Casualty
+from messages.msg       import Casualty_prediction
 from PIL                import Image as PImage
 from ultralytics        import YOLO
 from sensor_msgs.msg    import Image
 from cv_bridge          import CvBridge
 
-# constants
+# general constants
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
 CONFIDENCE_THRESHOLD    = 0
@@ -28,7 +23,7 @@ AMPUTATION_UPPER_EXT    = 5
 SEVERE_HEMORRHAGE       = 6
 
 # creating publisher
-publisher = rospy.Publisher('model_0_predictions', Prediction, queue_size=10)
+publisher = rospy.Publisher('model_0_predictions', Casualty_prediction, queue_size=10)
 
 # initializing yoloV8 model
 model = YOLO("./yoloV8_weights/best.pt")
@@ -36,98 +31,68 @@ model = YOLO("./yoloV8_weights/best.pt")
 # creating bridge object
 bridge = CvBridge()
 
+
+
+
+# used for printing system messages
 def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
 
-# publishes the results of a prediction to "yoloV8_prediction"
+
+
+
+# publishes the results of a prediction to "model_0_predictions"
 def publish_results(results):
-    # looping over results to add predictions to casualty object
-    casualty = Casualty()
+    # declaring and initializing ROS message
+    casualty_prediction = Casualty_prediction()
+    casualty_prediction.severe_hemorrhage      = 0
+    casualty_prediction.respiratory_distress   = -1
+    casualty_prediction.heart_rate             = -1
+    casualty_prediction.respiratory_rate       = -1
+    casualty_prediction.trauma_head            = 0
+    casualty_prediction.trauma_torso           = 0
+    casualty_prediction.trauma_lower_ext       = 0
+    casualty_prediction.trauma_upper_ext       = 0
+    casualty_prediction.alertness_ocular       = -1
+    casualty_prediction.alertness_verbal       = -1
+    casualty_prediction.alertness_motor        = -1
+
+    # looping over results form prediction and updating ROS message
     for result in results:
         for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy()):
             if conf < CONFIDENCE_THRESHOLD:
                 continue
             else:
                 if cls == TRAUMA_HEAD:
-                    casualty.trauma_head = 1
+                    casualty_prediction.trauma_head = 1
                 elif cls == TRAUMA_TORSO:
-                    casualty.trauma_torso = 1
+                    casualty_prediction.trauma_torso = 1
                 elif cls == TRAUMA_LOWER_EXT:
-                    if casualty.trauma_lower_ext != 2:
-                        casualty.trauma_lower_ext = 1
+                    if casualty_prediction.trauma_lower_ext != 2:
+                        casualty_prediction.trauma_lower_ext = 1
                 elif cls == AMPUTATION_LOWER_EXT:
-                    casualty.trauma_lower_ext = 2
+                    casualty_prediction.trauma_lower_ext = 2
                 elif cls == TRAUMA_UPPER_EXT:
-                    if casualty.trauma_upper_ext != 2:
-                        casualty.trauma_upper_ext = 1
+                    if casualty_prediction.trauma_upper_ext != 2:
+                        casualty_prediction.trauma_upper_ext = 1
                 elif cls == AMPUTATION_UPPER_EXT:
-                    casualty.trauma_upper_ext = 2
+                    casualty_prediction.trauma_upper_ext = 2
                 elif cls == SEVERE_HEMORRHAGE:
-                    casualty.severe_hemorrhage = 1
+                    casualty_prediction.severe_hemorrhage = 1
                 else:
                     print("---------------------------------------------------------------------")
                     system_print("\u001b[31mERROR - invalid affliction class\u001b[0m")
-    print("---------------------------------------------------------------------")
-    system_print("Results as casualty object")
-    print("---------------------------------------------------------------------")
-    casualty.print_self()
-
-    # creating ROS prediction message
-    prediction = Prediction()
-
-    # creating prediction element for trauma_head
-    prediction_element = Prediction_element()
-    prediction_element.type = Casualty.TRAUMA_HEAD
-    if casualty.trauma_head == -1:
-        prediction_element.value = 0
-    else:
-        prediction_element.value = casualty.trauma_head
-    prediction.prediction_elements.append(prediction_element)
-
-    # creating prediction element for trauma_torso
-    prediction_element = Prediction_element()
-    prediction_element.type = Casualty.TRAUMA_TORSO
-    if casualty.trauma_torso == -1:
-        prediction_element.value = 0
-    else:
-        prediction_element.value = casualty.trauma_torso
-    prediction.prediction_elements.append(prediction_element)
-
-    # creating prediction element for trauma_torso
-    prediction_element = Prediction_element()
-    prediction_element.type = Casualty.TRAUMA_LOWER_EXT
-    if casualty.trauma_lower_ext == -1:
-        prediction_element.value = 0
-    else:
-        prediction_element.value = casualty.trauma_lower_ext
-    prediction.prediction_elements.append(prediction_element)
-
-    # creating prediction element for trauma_torso
-    prediction_element = Prediction_element()
-    prediction_element.type = Casualty.TRAUMA_UPPER_EXT
-    if casualty.trauma_upper_ext == -1:
-        prediction_element.value = 0
-    else:
-        prediction_element.value = casualty.trauma_upper_ext
-    prediction.prediction_elements.append(prediction_element)
-
-    # creating prediction element for trauma_torso
-    prediction_element = Prediction_element()
-    prediction_element.type = Casualty.SEVERE_HEMORRHAGE
-    if casualty.severe_hemorrhage == -1:
-        prediction_element.value = 0
-    else:
-        prediction_element.value = casualty.severe_hemorrhage
-    prediction.prediction_elements.append(prediction_element)
 
     # printing ROS message for reference
     print("---------------------------------------------------------------------")
     system_print("ROS message")
     print("---------------------------------------------------------------------")
-    print(prediction)
+    print(casualty_prediction)
 
     # Publishing ROS message
-    publisher.publish(prediction)
+    publisher.publish(casualty_prediction)
+
+
 
 # runs yoloV8 on an image published to the "usb_cam/image_raw"
 def run_predictor_with_camera(raw_image):
@@ -150,7 +115,7 @@ def run_predictor_with_camera(raw_image):
 
 
 
-# runs yoloV8 on an image specified by a path to an image
+# runs yoloV8 on an image specified by a path
 def run_predictor_with_path():
     while True:
         # getting image path from user
@@ -164,7 +129,7 @@ def run_predictor_with_path():
             print("---------------------------------------------------------------------")
             system_print("Exiting...")
             print("---------------------------------------------------------------------")
-            break
+            exit(0)
 
         # opening image
         image = PImage.open(image_path)
@@ -190,11 +155,13 @@ def setup_predictor(choice):
     if choice == RUN_WITH_CAMERA:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with camera...")
+
         # registering callback functions
         rospy.Subscriber('usb_cam/image_raw', Image, run_predictor_with_camera)
     else:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with path...")
+
         # running predictor on image paths
         run_predictor_with_path()
         return
@@ -203,6 +170,7 @@ def setup_predictor(choice):
     while not rospy.is_shutdown():
         # sleeping to slow the loop down
         time.sleep(0.2)
+
 
 
 # main function if script is run independently
@@ -229,7 +197,6 @@ if __name__ == "__main__":
             system_print("Exiting...")
             print("---------------------------------------------------------------------")
             exit(0)
-            break
         else:
             print("---------------------------------------------------------------------")
             system_print("\u001b[31mInvalid choice...\u001b[0m")
