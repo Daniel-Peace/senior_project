@@ -9,5 +9,6 @@ int32 trauma_upper_ext
 int32 alertness_ocular
 int32 alertness_verbal
 int32 alertness_motor
+int32 time_ago
 int32 model
 bool is_coherent
