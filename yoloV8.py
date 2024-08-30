@@ -160,7 +160,7 @@ def setup_predictor(choice):
         system_print("Setting up model to run with camera...")
 
         # registering callback functions
-        rospy.Subscriber('usb_cam/image_raw', Image, run_predictor_with_camera)
+        rospy.Subscriber('picked_image', Image, run_predictor_with_camera)
     else:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with path...")
