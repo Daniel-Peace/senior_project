@@ -12,6 +12,7 @@ from cv_bridge          import CvBridge
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
 CONFIDENCE_THRESHOLD    = 0
+MODEL_NUMBER            = 0
 
 # prediction types
 TRAUMA_HEAD             = 0
@@ -56,6 +57,8 @@ def publish_results(results):
     casualty_prediction.alertness_ocular       = -1
     casualty_prediction.alertness_verbal       = -1
     casualty_prediction.alertness_motor        = -1
+    casualty_prediction.is_coherent            = True
+    casualty_prediction.model                  = MODEL_NUMBER
 
     # looping over results form prediction and updating ROS message
     for result in results:
@@ -149,7 +152,7 @@ def run_predictor_with_path():
 # sets up the predictor based on the users mode choice
 def setup_predictor(choice):
     # creating ROS node
-    rospy.init_node('model_1', anonymous=True)
+    rospy.init_node('model_0', anonymous=True)
 
     # checking which mode to run the predictor in
     if choice == RUN_WITH_CAMERA:
