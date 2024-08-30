@@ -105,15 +105,13 @@ class Casualty:
         report.system       = self.SYSTEM
         report.type         = self.affliction_types_strings[self.SEVERE_HEMORRHAGE]
         report.value        = self.severe_hemorrhage
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.RESPIRATORY_DISTRESS]
         report.value        = self.respiratory_distress
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
 
     # publishes vitals reports
@@ -125,15 +123,13 @@ class Casualty:
         report.system       = self.SYSTEM
         report.type         = self.affliction_types_strings[self.HEART_RATE]
         report.value        = self.heart_rate
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.RESPIRATORY_RATE]
         report.value        = self.respiratory_rate
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
 
     # publishes injury reports
@@ -145,45 +141,38 @@ class Casualty:
         report.system       = self.SYSTEM
         report.type         = self.affliction_types_strings[self.TRAUMA_HEAD]
         report.value        = self.trauma_head
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_TORSO]
         report.value        = self.trauma_torso
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_LOWER_EXT]
         report.value        = self.trauma_lower_ext
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_UPPER_EXT]
         report.value        = self.trauma_upper_ext
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_OCULAR]
         report.value        = self.alertness_ocular
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_VERBAL]
         report.value        = self.alertness_verbal
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_MOTOR]
         report.value        = self.alertness_motor
-        print("---")
         print(report)
-        print("---")
+        print("------------------------------------------------------")
         publisher.publish(report)
 
     # prints the members of this class
