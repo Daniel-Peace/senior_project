@@ -41,7 +41,8 @@ class Casualty:
     # constructor
     def __init__(
             self, april_tag         = -1, 
-            is_coherent             = -1, 
+            is_coherent             = True,
+            time_ago                = -1, 
             severe_hemorrhage       = -1, 
             respiratory_distress    = -1, 
             heart_rate              = -1, 
@@ -56,6 +57,7 @@ class Casualty:
         
         self.apriltag               = april_tag
         self.is_coherent            = is_coherent
+        self.time_ago               = time_ago
 
         # critical
         self.severe_hemorrhage      = severe_hemorrhage
@@ -77,7 +79,8 @@ class Casualty:
     # resets all members' values to -1
     def reset(self):
         self.apriltag               = -1
-        self.is_coherent            = -1
+        self.is_coherent            = True
+        self.time_ago               = -1
         self.severe_hemorrhage      = -1
         self.respiratory_distress   = -1
         self.heart_rate             = -1
@@ -121,6 +124,7 @@ class Casualty:
         report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
         report.system       = self.SYSTEM
+        report.time_ago     = self.time_ago
         report.type         = self.affliction_types_strings[self.HEART_RATE]
         report.value        = self.heart_rate
         print(report)
@@ -179,6 +183,7 @@ class Casualty:
     def print_self(self):
         print("AprilTag:\t\t\t" + str(self.apriltag))
         print("Is coherent:\t\t\t" + str(self.apriltag))
+        print("Time Ago:\t\t\t" + str(self.time_ago))
         print("Severe Hemorrhage:\t\t" + str(self.severe_hemorrhage))
         print("Respiratory Distress:\t\t" + str(self.respiratory_distress))
         print("Heart Rate:\t\t\t" + str(self.heart_rate))
