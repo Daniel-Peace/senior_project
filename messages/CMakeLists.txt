@@ -24,6 +24,7 @@ add_message_files(
   Timer_status.msg
   Assigned_apriltag.msg
   Casualty_prediction.msg
+  Pinned_apriltag.msg
 )
 
 include_directories(
