@@ -14,7 +14,7 @@ RUN_WITH_PATH           = 1
 CONFIDENCE_THRESHOLD    = 0
 MODEL_NUMBER            = 0
 
-# prediction types
+# afflication types
 TRAUMA_HEAD             = 0
 TRAUMA_TORSO            = 1
 TRAUMA_LOWER_EXT        = 2
@@ -23,24 +23,18 @@ TRAUMA_UPPER_EXT        = 4
 AMPUTATION_UPPER_EXT    = 5
 SEVERE_HEMORRHAGE       = 6
 
+# creating ROS node
+rospy.init_node('model_0', anonymous=True)
+
 # creating publisher
 publisher = rospy.Publisher('model_0_predictions', Casualty_prediction, queue_size=10)
 
 # initializing yoloV8 model
 model = YOLO("./yoloV8_weights/best.pt")
 
-# creating bridge object
-bridge = CvBridge()
-
-
-
-
 # used for printing system messages
 def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
-
-
-
 
 # publishes the results of a prediction to "model_0_predictions"
 def publish_results(results):
@@ -66,6 +60,7 @@ def publish_results(results):
             if conf < CONFIDENCE_THRESHOLD:
                 continue
             else:
+                # checking afflication type and updating ROS message
                 if cls == TRAUMA_HEAD:
                     casualty_prediction.trauma_head = 1
                 elif cls == TRAUMA_TORSO:
@@ -95,10 +90,10 @@ def publish_results(results):
     # Publishing ROS message
     publisher.publish(casualty_prediction)
 
-
-
 # runs yoloV8 on an image published to the "usb_cam/image_raw"
 def run_predictor_with_camera(raw_image):
+    # creating bridge object
+    bridge = CvBridge()
 
     # converting image to a cv image
     cv_image = bridge.imgmsg_to_cv2(raw_image, desired_encoding='passthrough')
@@ -113,10 +108,8 @@ def run_predictor_with_camera(raw_image):
     # running model on the numpy array
     results = model.predict(np_image)
 
-    # publishing resutls to ros topic
+    # publishing results to ROS topic
     publish_results(results)
-
-
 
 # runs yoloV8 on an image specified by a path
 def run_predictor_with_path():
@@ -127,7 +120,7 @@ def run_predictor_with_path():
         print("---------------------------------------------------------------------")
         image_path = input("\u001b[34m-> \u001b[0m")
 
-        # check if the user chose to quit
+        # checking if the user chose to quit
         if image_path == 'q' or image_path == 'Q':
             print("---------------------------------------------------------------------")
             system_print("Exiting...")
@@ -144,22 +137,17 @@ def run_predictor_with_path():
         # running model on image
         results = model.predict(source=image)
 
-        # publishing resutls to ros topic
+        # publishing results to ros topic
         publish_results(results)
-
-
 
 # sets up the predictor based on the users mode choice
 def setup_predictor(choice):
-    # creating ROS node
-    rospy.init_node('model_0', anonymous=True)
-
     # checking which mode to run the predictor in
     if choice == RUN_WITH_CAMERA:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with camera...")
 
-        # registering callback functions
+        # registering callback function
         rospy.Subscriber('picked_image', Image, run_predictor_with_camera)
     else:
         print("---------------------------------------------------------------------")
@@ -174,9 +162,6 @@ def setup_predictor(choice):
         # sleeping to slow the loop down
         time.sleep(0.2)
 
-
-
-# main function if script is run independently
 if __name__ == "__main__":
     # prompting user
     print("---------------------------------------------------------------------")
