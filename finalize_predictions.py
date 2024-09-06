@@ -7,7 +7,7 @@
 #   +----------------------+-------+    +----------------------+-------+
 #   | Radar                |   2   |    | HEART_RATE           |   2   |
 #   +----------------------+-------+    +----------------------+-------+
-#   |                      |   3   |    | RESPIRATORY_RATE     |   3   |
+#   | Face Mesh/Joints     |   3   |    | RESPIRATORY_RATE     |   3   |
 #   +----------------------+-------+    +----------------------+-------+
 #   |                      |   4   |    | TRAUMA_HEAD          |   4   |
 #   +----------------------+-------+    +----------------------+-------+
@@ -125,14 +125,14 @@ def wait_for_predictions():
         for index, tracker in enumerate(model_trackers, 0):
             if not tracker:
                 received_all_predictions = False
-                
+
             print("model " + str(index) + " has predicted:\t" + str(tracker))
         print("------------------------------------------------------")
         if i == int(TIMEOUT/0.2):
             break
         time.sleep(0.2)
         i += 1
-        
+
     if not received_all_predictions:
         system_print("some models timed out")
     else:
@@ -168,7 +168,7 @@ def finalize_afflication_values():
         if model_prediction.severe_hemorrhage == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.severe_hemorrhage == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -183,8 +183,8 @@ def finalize_afflication_values():
         if model_prediction.respiratory_distress == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.respiratory_distress == 1:
-            affliction_vote += model_weights[index] 
-               
+            affliction_vote += model_weights[index]
+
     # checking final vote count
     if affliction_vote > 0:
         finalized_casualty.respiratory_distress = 1
@@ -193,27 +193,31 @@ def finalize_afflication_values():
 
     # averaging heart rate values
     system_print("Finalizing heart rate prediction")
-    average_hr = 0
-    has_changed = False
+    average_hr          = 0
+    num_of_predictions  = 0
+    has_changed         = False
     for index, model_prediction in enumerate(model_predictions, 0):
         if model_prediction.heart_rate > 0:
             average_hr += model_prediction.heart_rate
+            num_of_predictions += 1
             has_changed = True
     if has_changed:
-        finalized_casualty.heart_rate = int(average_hr / NUM_OF_MODELS - 0.5 + 1)
+        finalized_casualty.heart_rate = int(average_hr / num_of_predictions - 0.5 + 1)
     else:
         finalized_casualty.heart_rate = DEFAULT_HR
 
     # averaging respiratory rate values
     system_print("Finalizing respiratory rate prediction")
-    average_rr = 0
-    has_changed = False
+    average_rr          = 0
+    num_of_predictions  = 0
+    has_changed         = False
     for index, model_prediction in enumerate(model_predictions, 0):
         if model_prediction.respiratory_rate > 0:
             average_rr += model_prediction.respiratory_rate
+            num_of_predictions += 1
             has_changed = True
     if has_changed:
-        finalized_casualty.respiratory_rate = int(average_rr / NUM_OF_MODELS - 0.5 + 1)
+        finalized_casualty.respiratory_rate = int(average_rr / num_of_predictions - 0.5 + 1)
     else:
         finalized_casualty.respiratory_rate = DEFAULT_RR
 
@@ -224,7 +228,7 @@ def finalize_afflication_values():
         if model_prediction.trauma_head == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.trauma_head == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -242,7 +246,7 @@ def finalize_afflication_values():
         if model_prediction.trauma_torso == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.trauma_torso == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -299,7 +303,7 @@ def finalize_afflication_values():
         if model_prediction.alertness_ocular == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.alertness_ocular == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -314,7 +318,7 @@ def finalize_afflication_values():
         if model_prediction.alertness_verbal == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.alertness_verbal == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -329,7 +333,7 @@ def finalize_afflication_values():
         if model_prediction.alertness_motor == 0:
             affliction_vote -= model_weights[index]
         elif model_prediction.alertness_motor == 1:
-            affliction_vote += model_weights[index]    
+            affliction_vote += model_weights[index]
 
     # checking final vote count
     if affliction_vote > 0:
@@ -352,7 +356,7 @@ def reset_trackers():
     system_print("Reseting trackers")
     global received_april
     received_april              = False
-    
+
     for i in range(6):
         model_trackers[i] = False
 
@@ -441,8 +445,7 @@ if __name__ == "__main__":
     system_print("Registering callback functions")
     rospy.Subscriber('prediction_timer_status', Timer_status, handle_timer_status)
     rospy.Subscriber('assigned_apriltag', Assigned_apriltag, assign_apriltag)
-    rospy.Subscriber('model_0_predictions', Casualty_prediction, receive_model_predictions)
-    rospy.Subscriber('model_1_predictions', Casualty_prediction, receive_model_predictions)
+    rospy.Subscriber('model_predictions', Casualty_prediction, receive_model_predictions)
 
     system_print("Waiting for timer to start...")
 

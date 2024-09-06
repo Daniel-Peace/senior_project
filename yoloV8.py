@@ -27,7 +27,7 @@ SEVERE_HEMORRHAGE       = 6
 rospy.init_node('model_0', anonymous=True)
 
 # creating publisher
-publisher = rospy.Publisher('model_0_predictions', Casualty_prediction, queue_size=10)
+publisher = rospy.Publisher('model_predictions', Casualty_prediction, queue_size=10)
 
 # initializing yoloV8 model
 model = YOLO("./yoloV8_weights/best.pt")
