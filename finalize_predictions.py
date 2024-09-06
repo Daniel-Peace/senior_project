@@ -254,6 +254,7 @@ def finalize_afflication_values():
     else:
         finalized_casualty.trauma_torso = 0
 
+    # adding up votes for trauma_lower_ext
     system_print("Finalizing trauma lower ext. prediction")
     lower_injury_vote       = 0
     lower_amputation_vote   = 0
@@ -263,7 +264,7 @@ def finalize_afflication_values():
             lower_amputation_vote -= model_weights[index]
         elif model_prediction.trauma_lower_ext == 2:
             lower_amputation_vote += model_weights[index]
-            lower_injury_vote += model_weights[index]
+            lower_injury_vote += float(model_weights[index]/2)
         elif model_prediction.trauma_lower_ext == 1:
             lower_injury_vote += model_weights[index]
 
@@ -274,7 +275,7 @@ def finalize_afflication_values():
     else:
         finalized_casualty.trauma_lower_ext = 0
 
-
+    # adding up votes for trauma_upper_ext
     system_print("Finalizing trauma upper ext. prediction")
     upper_injury_vote       = 0
     upper_amputation_vote   = 0
@@ -283,7 +284,7 @@ def finalize_afflication_values():
             upper_injury_vote -= model_weights[index]
             upper_amputation_vote -= model_weights[index]
         elif model_prediction.trauma_upper_ext == 2:
-            upper_injury_vote += model_weights[index]
+            upper_injury_vote += float(model_weights[index]/2)
             upper_amputation_vote += model_weights[index]
         elif model_prediction.trauma_upper_ext == 1:
             upper_injury_vote += model_weights[index]
