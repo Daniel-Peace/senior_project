@@ -1,16 +1,37 @@
 # imports
 import rospy
-from messages.msg import Assigned_apriltag
+
+# ROS messages
+from messages.msg       import Assigned_apriltag
+from apriltag_ros.msg   import AprilTagDetection
+
+# global variables
+current_april_tag = -1
+
+# initializing node
+rospy.init_node('assign_apriltag', anonymous=True)
 
 # creating ROS topic and publisher
 publisher = rospy.Publisher('assigned_apriltag', Assigned_apriltag, queue_size=10)
 
+
+
 def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
 
+def update_current_apriltag(april_tag_detections):
+    for index, detection in enumerate(april_tag_detections.detections):
+        if index == 0:
+            current_april_tag = detection[0]
+        else:
+            pass
+
 if __name__ == "__main__":
-    # initializing node
-    rospy.init_node('assign_apriltag', anonymous=True)
+
+    # registering callback functions
+    system_print("Registering callback functions")
+    rospy.Subscriber('tag_detections', AprilTagDetection, update_current_apriltag)
+    
 
     while True:
         # prompting user
