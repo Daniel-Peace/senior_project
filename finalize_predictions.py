@@ -284,7 +284,7 @@ def finalize_afflication_values():
             upper_injury_vote -= model_weights[index]
             upper_amputation_vote -= model_weights[index]
         elif model_prediction.trauma_upper_ext == 2:
-            upper_injury_vote += float(model_weights[index]/2)
+            upper_injury_vote += float(model_weights[index]/4)
             upper_amputation_vote += model_weights[index]
         elif model_prediction.trauma_upper_ext == 1:
             upper_injury_vote += model_weights[index]
