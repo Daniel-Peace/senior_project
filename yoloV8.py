@@ -2,6 +2,7 @@
 import numpy as np
 import time
 import rospy
+import json
 from messages.msg       import Casualty_prediction
 from PIL                import Image as PImage
 from ultralytics        import YOLO
@@ -30,7 +31,7 @@ rospy.init_node('model_0', anonymous=True)
 publisher = rospy.Publisher('model_predictions', Casualty_prediction, queue_size=10)
 
 # initializing yoloV8 model
-model = YOLO("./yoloV8_weights/best.pt")
+model = YOLO("./yoloV8_weights/iteration_2.pt")
 
 # used for printing system messages
 def system_print(s):
@@ -137,6 +138,12 @@ def run_predictor_with_path():
         # running model on image
         results = model.predict(source=image)
 
+        for result in results:
+            combined_data = [{"affliction_class": int(cls), "confidence": float(conf)} for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy())]
+            json.dumps(combined_data)
+            print(combined_data)
+            print("---------------------------------------------------------------------")
+
         # publishing results to ros topic
         publish_results(results)
 
@@ -148,11 +155,11 @@ def setup_predictor(choice):
         system_print("Setting up model to run with camera...")
 
         # registering callback function
+        system_print("Waiting for image...")
         rospy.Subscriber('picked_image', Image, run_predictor_with_camera)
     else:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with path...")
-
         # running predictor on image paths
         run_predictor_with_path()
         return
