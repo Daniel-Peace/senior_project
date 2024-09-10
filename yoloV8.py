@@ -1,21 +1,45 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This program implements Ultralytics' yoloV8. It provides the options of
+# running the model using a path provided by the user or by using images published
+# to the "picked_image" topic. The results of the model prediction are stored in a ROS
+# message of type "Prediction.msg" and published to the "model_predictions" topic.
+#
+# This model only predicts certain types of afflictions. Fields in the ROS message that the
+# model does not make predictions about are set to -1. When the model can make predictions
+# about an afflication but does not, it is assumed that the casualty does not have that
+# specific affliction and the field in the ROS message is set to zero to indicate this.
+#
+# The model pulls the weights from a folder in the src directory named yoloV8_weights.
+# You can change the weights being used by changing WEIGHTS constant to a path of your chosing.
+# The confidence value threshold for what predictions are published can be set with the
+# constant CONFIDENCE_THRESHOLD.
+# -------------------------------------------------------------------------------------------
+
 # imports
-import numpy as np
+import json
 import time
 import rospy
-import json
-from messages.msg       import Casualty_prediction
+import numpy as np
 from PIL                import Image as PImage
-from ultralytics        import YOLO
 from sensor_msgs.msg    import Image
+from ultralytics        import YOLO
 from cv_bridge          import CvBridge
+
+# ROS messages
+from messages.msg       import Casualty_prediction
+from ultralytics.utils  import WEIGHTS_DIR
 
 # general constants
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
+WEIGHTS                 = './yoloV8_weights/iteration_2.pt'
 CONFIDENCE_THRESHOLD    = 0
 MODEL_NUMBER            = 0
 
-# afflication types
+# afflication types that yoloV8 will predict
 TRAUMA_HEAD             = 0
 TRAUMA_TORSO            = 1
 TRAUMA_LOWER_EXT        = 2
@@ -31,13 +55,13 @@ rospy.init_node('model_0', anonymous=True)
 publisher = rospy.Publisher('model_predictions', Casualty_prediction, queue_size=10)
 
 # initializing yoloV8 model
-model = YOLO("./yoloV8_weights/iteration_2.pt")
+model = YOLO(WEIGHTS)
 
 # used for printing system messages
 def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
 
-# publishes the results of a prediction to "model_0_predictions"
+# publishes the results of a prediction to "model_predictions"
 def publish_results(results):
     # declaring and initializing ROS message
     casualty_prediction = Casualty_prediction()
@@ -58,6 +82,7 @@ def publish_results(results):
     # looping over results form prediction and updating ROS message
     for result in results:
         for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy()):
+            # checking if the prediction has a confidence value above the set threshold
             if conf < CONFIDENCE_THRESHOLD:
                 continue
             else:
@@ -83,7 +108,7 @@ def publish_results(results):
                     system_print("\u001b[31mERROR - invalid affliction class\u001b[0m")
 
     # printing ROS message for reference
-    print("---------------------------------------------------------------------")
+    print("\n---------------------------------------------------------------------")
     system_print("ROS message")
     print("---------------------------------------------------------------------")
     print(casualty_prediction)
@@ -92,7 +117,9 @@ def publish_results(results):
     publisher.publish(casualty_prediction)
 
 # runs yoloV8 on an image published to the "usb_cam/image_raw"
-def run_predictor_with_camera(raw_image):
+def run_model_with_camera(raw_image):
+    system_print("Received image")
+
     # creating bridge object
     bridge = CvBridge()
 
@@ -109,11 +136,20 @@ def run_predictor_with_camera(raw_image):
     # running model on the numpy array
     results = model.predict(np_image)
 
+    # printing results of prediction as json for reference
+    for result in results:
+        print("\n+-------+---------------+")
+        print("| class\t| Confidence\t|")
+        print("+-------+---------------+")
+        for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy()):
+            print("| " + str(int(cls)) + "\t| " + str(conf) + "\t|")
+            print("+-------+---------------+")
+
     # publishing results to ROS topic
     publish_results(results)
 
 # runs yoloV8 on an image specified by a path
-def run_predictor_with_path():
+def run_model_with_path():
     while True:
         # getting image path from user
         print("---------------------------------------------------------------------")
@@ -138,30 +174,33 @@ def run_predictor_with_path():
         # running model on image
         results = model.predict(source=image)
 
+        # printing results of prediction as json for reference
         for result in results:
-            combined_data = [{"affliction_class": int(cls), "confidence": float(conf)} for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy())]
-            json.dumps(combined_data)
-            print(combined_data)
-            print("---------------------------------------------------------------------")
+            print("\n+-------+---------------+")
+            print("| class\t| Confidence\t|")
+            print("+-------+---------------+")
+            for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy()):
+                print("| " + str(int(cls)) + "\t| " + str(conf) + "\t|")
+                print("+-------+---------------+")
 
         # publishing results to ros topic
         publish_results(results)
 
-# sets up the predictor based on the users mode choice
-def setup_predictor(choice):
-    # checking which mode to run the predictor in
+# sets up the model based on the users mode choice
+def setup_model(choice):
+    # checking which mode to run the model in
     if choice == RUN_WITH_CAMERA:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with camera...")
 
         # registering callback function
         system_print("Waiting for image...")
-        rospy.Subscriber('picked_image', Image, run_predictor_with_camera)
+        rospy.Subscriber('picked_image', Image, run_model_with_camera)
     else:
         print("---------------------------------------------------------------------")
         system_print("Setting up model to run with path...")
         # running predictor on image paths
-        run_predictor_with_path()
+        run_model_with_path()
         return
 
     # running node until user terminates the process
@@ -182,10 +221,10 @@ if __name__ == "__main__":
 
         # checking user's choice
         if choice == 'a':
-            setup_predictor(RUN_WITH_CAMERA)
+            setup_model(RUN_WITH_CAMERA)
             break
         elif choice == 'b':
-            setup_predictor(RUN_WITH_PATH)
+            setup_model(RUN_WITH_PATH)
             break
         elif choice == 'q' or choice == 'Q':
             print("---------------------------------------------------------------------")

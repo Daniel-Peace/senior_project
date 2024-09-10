@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------------------------------
 # Daniel Peace
-# Coordinated Robotics - DTC
+# CSUCI / Coordinated Robotics - DTC
 # -------------------------------------------------------------------------------------------
 # This program keeps track of the current image published to the "usb_cam/image_raw" topic.
 # When a timer_status message of true is received from the "prediction_timer_status" topic,

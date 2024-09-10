@@ -1,17 +1,37 @@
-#!/usr/bin/env python3
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This program is responsible for submitting finalized predictions to the scoring
+# server. It creates callback functions for each report type and submits
+# all ROS messages received from those topics. It also peridically sends a request
+# for a status update. The responses from each HTTP request is published to a corresponding
+# ROS topic:
+#   - critical_response
+#   - vitals_response
+#   - injury_response
+#   - status
+# -------------------------------------------------------------------------------------------
 
 # imports
+import json
+from logging import BASIC_FORMAT
+from numpy.lib.npyio import BagObj
 import requests
 import rospy
-import json
+import time
+
+# ROS messages
 from messages.msg import Critical_report
 from messages.msg import Critical_report_response
 from messages.msg import Injury_report
 from messages.msg import Injury_report_response
+from messages.msg import Status
 from messages.msg import Vitals_report
 from messages.msg import Vitals_report_response
-from messages.msg import Status
-import time
+
+# general constants
+BAR         = "---------------------------------------------------------------------"
 
 # network constants
 TEST_HOST   = 'http://0.0.0.0:80'
@@ -39,56 +59,40 @@ json_headers = {
     "Content-Type" : "application/json"
     }
 
-# creating ROS topics
+# creating publishers
 status_pub              = rospy.Publisher('status', Status, queue_size=10)
 critical_response_pub   = rospy.Publisher('critical_response', Critical_report_response, queue_size=10)
 vitals_response_pub     = rospy.Publisher('vitals_response', Vitals_report_response, queue_size=10)
 injury_response_pub     = rospy.Publisher('injury_response', Injury_report_response, queue_size=10)
+
+# used for printing system messages
+def system_print(s):
+    print("\u001b[34m[-] \u001b[0m" + s)
 
 # prints the formatted urls
 def print_urls():
     print("\n+-------------------------------------------------------+")
     print("|\t\t\tURLs\t\t\t\t|")
     print("+----------------+--------------------------------------+")
-    print("| status url     | " + status_url + "\t|")
+    print("| status url     | " + status_url + "\t\t|")
     print("+----------------+--------------------------------------+")
     print("| critical url   | " + critical_url + "\t|")
     print("+----------------+--------------------------------------+")
-    print("| vitals url     | " + vitals_url + "\t|")
+    print("| vitals url     | " + vitals_url + "\t\t|")
     print("+----------------+--------------------------------------+")
-    print("| injury url     | " + injury_url + "\t|")
+    print("| injury url     | " + injury_url + "\t\t|")
     print("+----------------+--------------------------------------+")
 
 # prints the formatted http headers
 def print_hreaders():
-    formatted_json = json.dumps(json_headers, indent = 2)
-    print("\n\n---------------------------------------------------------\nraw headers\n---------------------------------------------------------")
-    print(json_headers)
-    print("---------------------------------------------------------")
-    print("\n\n---------------------------------------------------------\nformatted headers\n---------------------------------------------------------")
-    print(formatted_json)
-    print("---------------------------------------------------------")
+    print("\n" + BAR)
+    system_print("Formatted headers")
+    print(BAR)
+    print(json.dumps(json_headers, indent = 2))
+    print(BAR)
 
-# prints a ROS report unformatted
-def print_raw_report(r):
-    print("\n\n---------------------------------------------------------\nraw report\n---------------------------------------------------------\n")
-    print(r)
-    print("---------------------------------------------------------")
-
-# prints a ROS report formatted as a JSON
-def print_json_report(r):
-    print("\n\n---------------------------------------------------------\njson msg\n---------------------------------------------------------")
-    print(r)
-    print("---------------------------------------------------------")
-
-
-
-# posts a critical report
+# posts a critical report to the scoring server
 def post_critical_report(r):
-
-    # printing raw report
-    print_raw_report(r)
-    
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
@@ -98,15 +102,16 @@ def post_critical_report(r):
         "value":        r.value
     }
 
-    # printing formatted report
-    print_json_report(r)
+    # printing report
+    system_print("Critical report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
     # sending post request
     response = requests.post(critical_url, headers = json_headers, json = report)
 
-    print(response.json())
+    # printing response
+    system_print("Critical report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ros msg for response
+    # creating ROS msg for response
     critical_report_response = Critical_report_response()
 
     # initializing message
@@ -117,23 +122,17 @@ def post_critical_report(r):
     critical_report_response.clock                = response.json()["clock"]
     critical_report_response.report_id            = response.json()["report_id"]
     critical_report_response.report_timestamp     = response.json()["report_timestamp"]
-    critical_report_response.reports_remaining    = response.json()["reports_remaining"]
+    critical_report_response.reports_remaining    = int(response.json()["reports_remaining"])
     critical_report_response.report_status        = response.json()["report_status"]
-    critical_report_response.casualty_id          = response.json()["casualty_id"]
+    critical_report_response.casualty_id          = int(response.json()["casualty_id"])
     critical_report_response.type                 = response.json()["type"]
-    critical_report_response.value                = response.json()["value"]
+    critical_report_response.value                = int(response.json()["value"])
 
     # publishing response to injury report
     critical_response_pub.publish(critical_report_response)
 
-
-
 # posts a vitals report
 def post_vitals_report(r):
-
-    # printing raw report
-    print_raw_report(r)
-    
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
@@ -144,15 +143,16 @@ def post_vitals_report(r):
         "time_ago":     r.time_ago
     }
 
-    # printing formatted report
-    print_json_report(r)
+    # printing report
+    system_print("Vitals report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
     # sending post request
     response = requests.post(vitals_url, headers = json_headers, json = report)
 
-    print(response.json())
+    # printing response
+    system_print("Vitals report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ros msg for response
+    # creating ROS msg for response
     vitals_report_response = Vitals_report_response()
 
     # initializing message
@@ -163,9 +163,9 @@ def post_vitals_report(r):
     vitals_report_response.clock                = response.json()["clock"]
     vitals_report_response.report_id            = response.json()["report_id"]
     vitals_report_response.report_timestamp     = response.json()["report_timestamp"]
-    vitals_report_response.reports_remaining    = response.json()["reports_remaining"]
+    vitals_report_response.reports_remaining    = int(response.json()["reports_remaining"])
     vitals_report_response.report_status        = response.json()["report_status"]
-    vitals_report_response.casualty_id          = response.json()["casualty_id"]
+    vitals_report_response.casualty_id          = int(response.json()["casualty_id"])
     vitals_report_response.type                 = response.json()["type"]
     vitals_report_response.value                = int(response.json()["value"])
     vitals_report_response.time_ago             = int(response.json()["time_ago"])
@@ -173,14 +173,8 @@ def post_vitals_report(r):
     # publishing response to injury report
     vitals_response_pub.publish(vitals_report_response)
 
-
-
 # posts a injury report
 def post_injury_report(r):
-
-    # printing raw report
-    print_raw_report(r)
-    
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
@@ -190,15 +184,16 @@ def post_injury_report(r):
         "value":        r.value
     }
 
-    # printing formatted report
-    print_json_report(r)
+    # printing report
+    system_print("Injury report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
     # sending post request
     response = requests.post(injury_url, headers = json_headers, json = report)
 
-    print(response.json())
+    # printing response
+    system_print("Injury report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ros msg for response
+    # creating ROS msg for response
     injury_report_response = Injury_report_response()
 
     # initializing message
@@ -209,16 +204,16 @@ def post_injury_report(r):
     injury_report_response.clock                = response.json()["clock"]
     injury_report_response.report_id            = response.json()["report_id"]
     injury_report_response.report_timestamp     = response.json()["report_timestamp"]
-    injury_report_response.reports_remaining    = response.json()["reports_remaining"]
+    injury_report_response.reports_remaining    = int(response.json()["reports_remaining"])
     injury_report_response.report_status        = response.json()["report_status"]
-    injury_report_response.casualty_id          = response.json()["casualty_id"]
+    injury_report_response.casualty_id          = int(response.json()["casualty_id"])
     injury_report_response.type                 = response.json()["type"]
-    injury_report_response.value                = response.json()["value"]
+    injury_report_response.value                = int(response.json()["value"])
 
     # publishing response to injury report
     injury_response_pub.publish(injury_report_response)
 
-#listens for status messages and registers a callback function for the injury 
+#listens for status messages and registers a callback function for the injury
 def listener():
     # initializing node
     rospy.init_node('report_node', anonymous=True)
@@ -230,14 +225,16 @@ def listener():
 
     # looping until program is quit
     while not rospy.is_shutdown():
-        status_msg = Status()
+
 
         # sending get request for status message
         response = requests.get(status_url, headers = json_headers)
 
-        print_json_report(response.json())
+        # printing response from server
+        system_print("Status response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-        # creating message to publishj
+        # creating message to publish
+        status_msg = Status()
         status_msg.clock                                        = response.json()["clock"]
         status_msg.team                                         = response.json()["team"]
         status_msg.user                                         = response.json()["user"]
