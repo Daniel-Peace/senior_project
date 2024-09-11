@@ -1,10 +1,48 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class provides members for storing all data partaining to a casualty. It also
+# provides several methods for working on an instance of this class. You can change
+# which system and team name is used with the reports by changing the constants TEAM_NAME
+# and SYSTEM at the top of the program.
+#
+# METHOD NAME: reset
+# DESCRIPTION: This function resets an instance of this class to the default values used
+# by the contructor.
+#
+# METHOD NAME: publish_reports
+# DESCRIPTION: This method calls three other methods:
+#   - publish_critical_reports
+#   - publish_vitals_reprots
+#   - publish_injury_reports
+#
+# METHOD NAME: publish_critical_reports
+# DESCRIPTION: This method takes self and creates all relevent critical reports from the data
+# stored in its members. It publishes these reports to the "critical_report" topic
+#
+# METHOD NAME: publish_vitals_reports
+# DESCRIPTION: This method takes self and creates all relevent vitals reports from the data
+# stored in its members. It publishes these reports to the "vitals_report" topic
+#
+# METHOD NAME: publish_injury_reports
+# DESCRIPTION: This method takes self and creates all relevent injury reports from the data
+# stored in its members. It publishes these reports to the "injury_report" topic
+#
+# METHOD NAME: print_self
+# DESCRIPTION: This method formats and prints all members of this class.
+# -------------------------------------------------------------------------------------------
+
+# imports
 import rospy
+
+# ROS messages
 from messages.msg import Critical_report
 from messages.msg import Vitals_report
 from messages.msg import Injury_report
 
 class Casualty:
-    # constants
+    # general constants
     TEAM_NAME   = "coordinated robotics"
     SYSTEM      = "JOE"
 
@@ -25,6 +63,7 @@ class Casualty:
     ALERTNESS_VERBAL        = 9
     ALERTNESS_MOTOR         = 10
 
+    # This array contains all "types" of afflications (used for creation of reports)
     affliction_types_strings = [
         "severe_hemorrhage",
         "respiratory_distress",
@@ -40,21 +79,21 @@ class Casualty:
 
     # constructor
     def __init__(
-            self, april_tag         = -1, 
+            self, april_tag         = -1,
             is_coherent             = True,
-            time_ago                = -1, 
-            severe_hemorrhage       = -1, 
-            respiratory_distress    = -1, 
-            heart_rate              = -1, 
-            respiratory_rate        = -1, 
-            trauma_head             = -1, 
-            trauma_torso            = -1, 
-            trauma_lower_ext        = -1, 
-            trauma_upper_ext        = -1, 
-            alertness_ocular        = -1, 
-            alertness_verbal        = -1, 
+            time_ago                = -1,
+            severe_hemorrhage       = -1,
+            respiratory_distress    = -1,
+            heart_rate              = -1,
+            respiratory_rate        = -1,
+            trauma_head             = -1,
+            trauma_torso            = -1,
+            trauma_lower_ext        = -1,
+            trauma_upper_ext        = -1,
+            alertness_ocular        = -1,
+            alertness_verbal        = -1,
             alertness_motor         = -1) -> None:
-        
+
         self.apriltag               = april_tag
         self.is_coherent            = is_coherent
         self.time_ago               = time_ago
@@ -76,7 +115,7 @@ class Casualty:
         self.alertness_verbal       = alertness_verbal
         self.alertness_motor        = alertness_motor
 
-    # resets all members' values to -1
+    # resets class object
     def reset(self):
         self.apriltag               = -1
         self.is_coherent            = True
