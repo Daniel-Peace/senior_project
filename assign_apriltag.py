@@ -98,7 +98,6 @@ def handle_prediction_timer_status(timer):
     else:
         system_print("Prediction timer ended")
 
-
 if __name__ == "__main__":
     print("---------------------------------------------------------------------")
     # registering callback functions
