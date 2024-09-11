@@ -21,7 +21,7 @@ def system_print(s):
 
 # this function initializes the "model_predictions" list with test predictions
 def initialize_predictions():
-    # declaring and initializing model 1 prediction
+    # declaring and initializing model 0 prediction
     prediction = Casualty_prediction()
     prediction.severe_hemorrhage      = 1
     prediction.respiratory_distress   = -1
@@ -97,7 +97,7 @@ def initialize_predictions():
     # adding prediction to list
     model_predictions.append(prediction)
 
-# this function publishes a specific prediction from "model_predictions" 
+# this function publishes a specific prediction from "model_predictions"
 # based on what index is passed in
 def publish_prediction(model_number):
     print("------------------------------------------------------")
