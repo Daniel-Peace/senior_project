@@ -1,3 +1,47 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This program is responsible for receiving all predictions from all models and creating
+# a finalized report about a casualty. It also receives the assigned AprilTag and
+# adds this to the final report. To accomplish this the program waits for a prediction
+# timer to start. Once a timer has started the program resets all variables and objects
+# in preparation for receiving predictions and the assigned AprilTag. Anytime during the
+# timer, the program can receive predictions and update each models prediction object.
+# Once the timer has ended. The model weights 2 seconds both for final predictions to come
+# in, and for an apriltag to be assigned. After this, it and moves on to
+# finalizing all of the predictions. Upon completing this process, it calls the
+# publish_reports method on finalized_casualty which creates reports for each afflication
+# type and publishes them to their respective topics.
+#
+# During the finalzation process this program assumes that if a member of a casualty
+# object is -1, then the model represented by that object did not predict for that
+# affliction type.
+#
+# For all alertness affliction types there is currently only one model for each
+# type. This program therefore assigns those models predictions directly to the final
+# report rather than using a voting system of anykind.
+#
+# For affliction categories using a voting system, the weights assigned to each model
+# can be adjusted using the weight constants towards the top of the program
+#
+# If any of the afflication categories fails to find a model that made a prediction for
+# said category, the model assigns whichever value would be considered "normal"
+# by default. For both heart rate and respiratory rate, these values can be modified using
+# the DEFAULT_HR and DEFAULT_RR constants.
+#
+# The timout timers length can be adjusted using the PREDICTION_TIMEOUT and APRILTAG_TIMEOUT
+# constants.
+#
+# In the event that an AprilTag is not received, it will assign -1 to the report and leave
+# it to "send_report.py" to handle.
+#
+# Some functions and parts of the initialization process require knowledge of the number
+# of models being linked. The NUM_OF_MODELS should be set accordingly. You should also
+# add more weight constants, index constants, and modify the initialization of the weights
+# array in the case of adding more models. (This may be improved in the future)
+# -------------------------------------------------------------------------------------------
+
 #   +------------------------------+    +------------------------------+
 #   | Models and their numbers     |    | Affliction types and values  |
 #   +----------------------+-------+    +----------------------+-------+
@@ -25,26 +69,28 @@
 #                                       +----------------------+-------+
 
 # imports
-import rospy
 import time
+import rospy
 from casualty import Casualty
-from messages.msg import Assigned_apriltag, Critical_report
-from messages.msg import Injury_report
-from messages.msg import Vitals_report
-from messages.msg import Timer_status
+
+# ROS messages
+from messages.msg import Assigned_apriltag
 from messages.msg import Casualty_prediction
+from messages.msg import Critical_report
+from messages.msg import Injury_report
+from messages.msg import Timer_status
+from messages.msg import Vitals_report
 
 # general constants
-TEAM_NAME       = "coordinated robotics"
-SYSTEM          = "JOE"
-NUM_OF_MODELS   = 6
-DEFAULT_HR      = 100
-DEFAULT_RR      = 25
-TIMEOUT         = 2
+NUM_OF_MODELS       = 6
+DEFAULT_HR          = 100
+DEFAULT_RR          = 25
+PREDICTION_TIMEOUT  = 2
+APRILTAG_TIMEOUT    = 2
 
 # model weights
 MODEL_0_WEIGHT = 1
-MODEL_1_WEIGHT = 2
+MODEL_1_WEIGHT = 3
 MODEL_2_WEIGHT = 1
 MODEL_3_WEIGHT = 1
 MODEL_4_WEIGHT = 1
@@ -65,13 +111,13 @@ apriltag = -1
 received_april = False
 
 # holds tracking values for if a model has published a submission yet
-model_trackers = []
-for i in range(NUM_OF_MODELS):
-    model_trackers.append(False)
+prediction_received = []
+for index in range(NUM_OF_MODELS):
+    prediction_received.append(False)
 
 # creating casualty objects for each model to hold predictions
 model_predictions = []
-for i in range(NUM_OF_MODELS):
+for index in range(NUM_OF_MODELS):
         model_predictions.append(Casualty())
 finalized_casualty  = Casualty()
 
@@ -90,11 +136,6 @@ model_weights.append(weight)
 weight = MODEL_5_WEIGHT
 model_weights.append(weight)
 
-# creating ROS topics
-critical_report_pub   = rospy.Publisher('critical_report', Critical_report, queue_size=10)
-vitals_report_pub     = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
-injury_report_pub     = rospy.Publisher('injury_report', Injury_report, queue_size=10)
-
 # initializing node
 rospy.init_node('vote_and_create', anonymous=True)
 
@@ -111,32 +152,38 @@ def reset_weight_array():
     model_weights[MODEL_4_INDEX] = MODEL_4_WEIGHT
     model_weights[MODEL_5_INDEX] = MODEL_5_WEIGHT
 
-
 # loops until all needed predictions have been received
 def wait_for_predictions():
     received_all_predictions = False
-    i = 0
+    timeout_tracker = 0
+
+    # waiting until all predictions have been received or timeout occurs
     while not received_all_predictions:
-        if i == 0:
+        if timeout_tracker == 0:
             system_print("Waiting for predictions...")
-        system_print("Models' prediction status:")
-        print("------------------------------------------------------")
+
+        # checking which models have published predictions
         received_all_predictions = True
-        for index, tracker in enumerate(model_trackers, 0):
-            if not tracker:
+        for has_predicted in prediction_received:
+            if not has_predicted:
                 received_all_predictions = False
 
-            print("model " + str(index) + " has predicted:\t" + str(tracker))
-        print("------------------------------------------------------")
-        if i == int(TIMEOUT/0.2):
+        # checking for timeout
+        if timeout_tracker == int(PREDICTION_TIMEOUT/0.2):
             break
         time.sleep(0.2)
-        i += 1
+        timeout_tracker += 1
 
+    # printing status of which models predicted
     if not received_all_predictions:
         system_print("some models timed out")
     else:
         system_print("Received all needed predictions")
+    system_print("Models' prediction status:")
+    print("------------------------------------------------------")
+    for index, has_predicted in enumerate(prediction_received, 0):
+        print("model " + str(index) + " has predicted:\t" + str(has_predicted))
+    print("------------------------------------------------------")
 
 
 # publishes reports to respective topics
@@ -148,8 +195,13 @@ def publish_reports():
 # handles combining and finalizing reports
 def finalize_afflication_values():
     system_print("Finalizing predictions")
+
+    # getting time_ago value
     if model_predictions[MODEL_2_INDEX].time_ago >= 0:
         finalized_casualty.time_ago = model_predictions[MODEL_2_INDEX].time_ago
+    elif False:
+    # TODO: Add other cases to check if other models have a time_ago greater than zero
+        pass
     else:
         finalized_casualty.time_ago = 0
 
@@ -176,8 +228,8 @@ def finalize_afflication_values():
     else:
         finalized_casualty.severe_hemorrhage = 0
 
-    system_print("Finalizing respiratory distress prediction")
     # adding up votes for respiratory_distress
+    system_print("Finalizing respiratory distress prediction")
     affliction_vote = 0
     for index, model_prediction in enumerate(model_predictions, 0):
         if model_prediction.respiratory_distress == 0:
@@ -197,7 +249,7 @@ def finalize_afflication_values():
     num_of_predictions  = 0
     has_changed         = False
     for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.heart_rate > 0:
+        if model_prediction.heart_rate >= 0:
             average_hr += model_prediction.heart_rate
             num_of_predictions += 1
             has_changed = True
@@ -212,7 +264,7 @@ def finalize_afflication_values():
     num_of_predictions  = 0
     has_changed         = False
     for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.respiratory_rate > 0:
+        if model_prediction.respiratory_rate >= 0:
             average_rr += model_prediction.respiratory_rate
             num_of_predictions += 1
             has_changed = True
@@ -233,11 +285,8 @@ def finalize_afflication_values():
     # checking final vote count
     if affliction_vote > 0:
         finalized_casualty.trauma_head = 1
-    elif affliction_vote < 0:
-        finalized_casualty.trauma_head = 0
     else:
-        # TODO determine what guess should be
-        pass
+        finalized_casualty.trauma_head = 0
 
     # adding up votes for trauma_torso
     system_print("Finalizing trauma torso prediction")
@@ -263,8 +312,8 @@ def finalize_afflication_values():
             lower_injury_vote -= model_weights[index]
             lower_amputation_vote -= model_weights[index]
         elif model_prediction.trauma_lower_ext == 2:
-            lower_amputation_vote += model_weights[index]
             lower_injury_vote += float(model_weights[index]/2)
+            lower_amputation_vote += model_weights[index]
         elif model_prediction.trauma_lower_ext == 1:
             lower_injury_vote += model_weights[index]
 
@@ -284,7 +333,7 @@ def finalize_afflication_values():
             upper_injury_vote -= model_weights[index]
             upper_amputation_vote -= model_weights[index]
         elif model_prediction.trauma_upper_ext == 2:
-            upper_injury_vote += float(model_weights[index]/4)
+            upper_injury_vote += float(model_weights[index]/2)
             upper_amputation_vote += model_weights[index]
         elif model_prediction.trauma_upper_ext == 1:
             upper_injury_vote += model_weights[index]
@@ -296,61 +345,43 @@ def finalize_afflication_values():
     else:
         finalized_casualty.trauma_upper_ext = 0
 
-
-    # adding up votes for trauma_head
+    # finalizing alertness ocular
     system_print("Finalizing alertness ocular prediction")
-    affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.alertness_ocular == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.alertness_ocular == 1:
-            affliction_vote += model_weights[index]
-
-    # checking final vote count
-    if affliction_vote > 0:
-        finalized_casualty.alertness_ocular = 1
+    if model_predictions[MODEL_3_INDEX].alertness_ocular >= 0:
+        finalized_casualty.alertness_ocular = model_predictions[MODEL_3_INDEX].alertness_ocular
     else:
         finalized_casualty.alertness_ocular = 0
 
-    # adding up votes for trauma_head
+    # finalizing alertness verbal
     system_print("Finalizing alertness verbal prediction")
-    affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.alertness_verbal == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.alertness_verbal == 1:
-            affliction_vote += model_weights[index]
-
-    # checking final vote count
-    if affliction_vote > 0:
-        finalized_casualty.alertness_verbal = 1
+    if model_predictions[MODEL_1_INDEX].alertness_verbal >= 0:
+        finalized_casualty.alertness_verbal = model_predictions[MODEL_1_INDEX].alertness_verbal
     else:
         finalized_casualty.alertness_verbal = 0
 
-    # adding up votes for trauma_head
+    # finalizing alertness motor
     system_print("Finalizing alertness motor prediction")
-    affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.alertness_motor == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.alertness_motor == 1:
-            affliction_vote += model_weights[index]
-
-    # checking final vote count
-    if affliction_vote > 0:
-        finalized_casualty.alertness_motor = 1
+    if model_predictions[MODEL_3_INDEX].alertness_motor >= 0:
+        finalized_casualty.alertness_motor = model_predictions[MODEL_3_INDEX].alertness_motor
     else:
         finalized_casualty.alertness_motor = 0
 
 # waits for specified models to finish predictions
 def wait_for_apriltag():
-    i = 0
+    timeout_tracker = 0
     while not received_april:
-        if i == 0:
+        if timeout_tracker == 0:
             system_print("Waiting for AprilTag...")
-        time.sleep(0.5)
-        i += 1
+
+        # checking for timeout
+        if timeout_tracker == int(APRILTAG_TIMEOUT/0.2):
+            break
+        time.sleep(0.2)
+        timeout_tracker += 1
         continue
+
+    if not received_april:
+        system_print("Failed to receive AprilTag")
 
 # resets tracking variables
 def reset_trackers():
@@ -358,8 +389,8 @@ def reset_trackers():
     global received_april
     received_april              = False
 
-    for i in range(6):
-        model_trackers[i] = False
+    for i in range(NUM_OF_MODELS):
+        prediction_received[i] = False
 
 # resets apriltag value
 def reset_apriltag():
@@ -400,17 +431,17 @@ def on_timer_start():
     reset()
 
 # handles actions corresponding to the timer starting and stopping
-def handle_timer_status(msg):
-    if msg.timer_status == True:
+def handle_timer_status(timer):
+    if timer.timer_status == True:
         on_timer_start()
     else:
         on_timer_finish()
 
 # gets the assigned AprilTag and sets it
-def assign_apriltag(msg):
+def assign_apriltag(assigned_apriltag):
     system_print("Received AprilTag")
     global apriltag
-    apriltag = msg.apriltag
+    apriltag = assigned_apriltag.apriltag
     global received_april
     received_april = True
     system_print("Set AprilTag")
@@ -428,7 +459,8 @@ def receive_model_predictions(casualty_ros):
     model_predictions[casualty_ros.model].alertness_ocular       = casualty_ros.alertness_ocular
     model_predictions[casualty_ros.model].alertness_verbal       = casualty_ros.alertness_verbal
     model_predictions[casualty_ros.model].alertness_motor        = casualty_ros.alertness_motor
-    model_trackers[casualty_ros.model] = True
+    model_predictions[casualty_ros.model].is_coherent            = casualty_ros.is_coherent
+    prediction_received[casualty_ros.model] = True
 
     system_print("Received prediction from model " + str(casualty_ros.model))
     print("------------------------------------------------------")
