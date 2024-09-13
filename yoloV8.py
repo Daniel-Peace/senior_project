@@ -16,6 +16,10 @@
 # You can change the weights being used by changing WEIGHTS constant to a path of your chosing.
 # The confidence value threshold for what predictions are published can be set with the
 # constant CONFIDENCE_THRESHOLD.
+#
+# There is a DEBUG constant at the top of the program now. IF this is set to true, you
+# will have the choice to run the program with either a path or with the camera. If
+# it is set to false the program will run with the camera by default.
 # -------------------------------------------------------------------------------------------
 
 # imports
@@ -33,6 +37,7 @@ from messages.msg       import Casualty_prediction
 from ultralytics.utils  import WEIGHTS_DIR
 
 # general constants
+DEBUG                   = False
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
 WEIGHTS                 = './yoloV8_weights/iteration_2.pt'
@@ -209,28 +214,32 @@ def setup_model(choice):
         time.sleep(0.2)
 
 if __name__ == "__main__":
-    # prompting user
-    print("---------------------------------------------------------------------")
-    system_print("Choose how you would like to run this program\n\ta. Run using usb_camera node\n\tb. Run using a path to an image")
 
-    # looping unitl a valid choice is entered or the program is quit
-    while True:
+    if DEBUG:
         # prompting user
         print("---------------------------------------------------------------------")
-        choice = input("\u001b[34m-> \u001b[0m")
+        system_print("Choose how you would like to run this program\n\ta. Run using usb_camera node\n\tb. Run using a path to an image")
 
-        # checking user's choice
-        if choice == 'a':
-            setup_model(RUN_WITH_CAMERA)
-            break
-        elif choice == 'b':
-            setup_model(RUN_WITH_PATH)
-            break
-        elif choice == 'q' or choice == 'Q':
+        # looping unitl a valid choice is entered or the program is quit
+        while True:
+            # prompting user
             print("---------------------------------------------------------------------")
-            system_print("Exiting...")
-            print("---------------------------------------------------------------------")
-            exit(0)
-        else:
-            print("---------------------------------------------------------------------")
-            system_print("\u001b[31mInvalid choice...\u001b[0m")
+            choice = input("\u001b[34m-> \u001b[0m")
+
+            # checking user's choice
+            if choice == 'a':
+                setup_model(RUN_WITH_CAMERA)
+                break
+            elif choice == 'b':
+                setup_model(RUN_WITH_PATH)
+                break
+            elif choice == 'q' or choice == 'Q':
+                print("---------------------------------------------------------------------")
+                system_print("Exiting...")
+                print("---------------------------------------------------------------------")
+                exit(0)
+            else:
+                print("---------------------------------------------------------------------")
+                system_print("\u001b[31mInvalid choice...\u001b[0m")
+    else:
+        setup_model(RUN_WITH_CAMERA)
