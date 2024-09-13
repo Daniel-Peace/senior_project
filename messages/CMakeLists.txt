@@ -14,7 +14,7 @@ add_message_files(
   Injury.msg
   Injury_report.msg
   Injury_report_response.msg
-  Prediction.msg 
+  Prediction.msg
   Prediction_element.msg
   Remaining_reports.msg
   Status.msg
@@ -25,6 +25,7 @@ add_message_files(
   Assigned_apriltag.msg
   Casualty_prediction.msg
   Pinned_apriltag.msg
+  Command.msg
 )
 
 include_directories(
