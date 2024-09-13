@@ -93,6 +93,10 @@ def print_hreaders():
 
 # posts a critical report to the scoring server
 def post_critical_report(r):
+    if r.casualty_id < 0:
+        system_print("No casualty ID found. Skipping report")
+        return
+
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
@@ -133,6 +137,10 @@ def post_critical_report(r):
 
 # posts a vitals report
 def post_vitals_report(r):
+    if r.casualty_id < 0:
+        system_print("No casualty ID found. Skipping report")
+        return
+
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
@@ -175,6 +183,10 @@ def post_vitals_report(r):
 
 # posts a injury report
 def post_injury_report(r):
+    if r.casualty_id < 0:
+        system_print("No casualty ID found. Skipping report")
+        return
+
     # creating report json
     report = {
         "casualty_id":  r.casualty_id,
