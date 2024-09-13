@@ -24,7 +24,7 @@ from messages.msg       import Timer_status
 from apriltag_ros.msg   import AprilTagDetection, AprilTagDetectionArray
 
 # global variables
-current_apriltag        = 999
+current_apriltag        = -1
 current_distance        = 999
 apriltag_timer_started  = False
 
@@ -44,7 +44,7 @@ def reset():
     global current_apriltag
     global current_distance
     global apriltag_timer_started
-    current_apriltag        = 999
+    current_apriltag        = -1
     current_distance        = 999
     apriltag_timer_started  = False
 
