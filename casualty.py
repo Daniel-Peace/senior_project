@@ -41,6 +41,11 @@ from messages.msg import Critical_report
 from messages.msg import Vitals_report
 from messages.msg import Injury_report
 
+# creating publishers
+c_publisher = rospy.Publisher('critical_report', Critical_report, queue_size=10)
+v_publisher = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
+i_publisher = rospy.Publisher('injury_report', Injury_report, queue_size=10)
+
 class Casualty:
     # general constants
     TEAM_NAME   = "coordinated robotics"
@@ -140,7 +145,6 @@ class Casualty:
 
     # publishes critical reports
     def publish_critical_reports(self):
-        publisher           = rospy.Publisher('critical_report', Critical_report, queue_size=10)
         report              = Critical_report()
         report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
@@ -149,16 +153,19 @@ class Casualty:
         report.value        = self.severe_hemorrhage
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing critical report")
+        print("------------------------------------------------------")
+        c_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.RESPIRATORY_DISTRESS]
         report.value        = self.respiratory_distress
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing critical report")
+        print("------------------------------------------------------")
+        c_publisher.publish(report)
 
     # publishes vitals reports
     def publish_vitals_reprots(self):
-        publisher           = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
         report              = Vitals_report()
         report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
@@ -168,16 +175,19 @@ class Casualty:
         report.value        = self.heart_rate
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing vitals report")
+        print("------------------------------------------------------")
+        v_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.RESPIRATORY_RATE]
         report.value        = self.respiratory_rate
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing vitals report")
+        print("------------------------------------------------------")
+        v_publisher.publish(report)
 
     # publishes injury reports
     def publish_injury_reports(self):
-        publisher           = rospy.Publisher('injury_report', Injury_report, queue_size=10)
         report              = Injury_report()
         report.casualty_id  = self.apriltag
         report.team         = self.TEAM_NAME
@@ -186,37 +196,51 @@ class Casualty:
         report.value        = self.trauma_head
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_TORSO]
         report.value        = self.trauma_torso
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_LOWER_EXT]
         report.value        = self.trauma_lower_ext
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.TRAUMA_UPPER_EXT]
         report.value        = self.trauma_upper_ext
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_OCULAR]
         report.value        = self.alertness_ocular
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_VERBAL]
         report.value        = self.alertness_verbal
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
         report.type         = self.affliction_types_strings[self.ALERTNESS_MOTOR]
         report.value        = self.alertness_motor
         print(report)
         print("------------------------------------------------------")
-        publisher.publish(report)
+        print("\u001b[34m[-] \u001b[0mPublishing injury report")
+        print("------------------------------------------------------")
+        i_publisher.publish(report)
 
     # prints the members of this class
     def print_self(self):
