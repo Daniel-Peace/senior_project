@@ -47,12 +47,12 @@ def initialize_predictions():
     prediction.heart_rate             = -1
     prediction.respiratory_rate       = -1
     prediction.trauma_head            = 0
-    prediction.trauma_torso           = 1
-    prediction.trauma_lower_ext       = 1
-    prediction.trauma_upper_ext       = 2
-    prediction.alertness_ocular       = 0
+    prediction.trauma_torso           = 0
+    prediction.trauma_lower_ext       = 2
+    prediction.trauma_upper_ext       = 1
+    prediction.alertness_ocular       = -1
     prediction.alertness_verbal       = 0
-    prediction.alertness_motor        = 1
+    prediction.alertness_motor        = -1
     prediction.is_coherent            = True
     prediction.model                  = 1
 
@@ -93,6 +93,22 @@ def initialize_predictions():
     prediction.alertness_motor        = 1
     prediction.is_coherent            = True
     prediction.model                  = 3
+
+    # declaring and initializing model 4 prediction
+    prediction = Casualty_prediction()
+    prediction.severe_hemorrhage      = -1
+    prediction.respiratory_distress   = 1
+    prediction.heart_rate             = 144
+    prediction.respiratory_rate       = 50
+    prediction.trauma_head            = -1
+    prediction.trauma_torso           = -1
+    prediction.trauma_lower_ext       = -1
+    prediction.trauma_upper_ext       = -1
+    prediction.alertness_ocular       = -1
+    prediction.alertness_verbal       = -1
+    prediction.alertness_motor        = -1
+    prediction.is_coherent            = True
+    prediction.model                  = 4
 
     # adding prediction to list
     model_predictions.append(prediction)
