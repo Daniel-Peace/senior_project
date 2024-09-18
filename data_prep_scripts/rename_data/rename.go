@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+const ZEROS = "00000"
+
 func main() {
 	clear_terminal()
 	path := get_path()
@@ -125,7 +127,7 @@ func rename_data(path string, name string, img_index int) {
 	}
 
 	increment_postfix := false
-	zeros := "0000"
+	zeros := ZEROS
 	// looping over files in directory and renaming them
 	for index, file := range files {
 		oldName := filepath.Join(path, file.Name())
@@ -133,7 +135,7 @@ func rename_data(path string, name string, img_index int) {
 		//baseName := file.Name()[:len(file.Name())-len(ext)]
 
 		if index%2 == 0 {
-			if ext != ".png" {
+			if ext != ".jpg" {
 				fmt.Println("system: \x1b[31mERROR - expected png but found", ext[1:])
 				fmt.Println("\x1b[0m")
 				fmt.Println("-------------------------------------------------------------------------------")
