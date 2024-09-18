@@ -53,7 +53,7 @@
 #   +----------------------+-------+    +----------------------+-------+
 #   | Face Mesh/Joints     |   3   |    | RESPIRATORY_RATE     |   3   |
 #   +----------------------+-------+    +----------------------+-------+
-#   |                      |   4   |    | TRAUMA_HEAD          |   4   |
+#   | Depth Camera         |   4   |    | TRAUMA_HEAD          |   4   |
 #   +----------------------+-------+    +----------------------+-------+
 #   |                      |   5   |    | TRAUMA_TORSO         |   5   |
 #   +----------------------+-------+    +----------------------+-------+
@@ -199,9 +199,8 @@ def finalize_afflication_values():
     # getting time_ago value
     if model_predictions[MODEL_2_INDEX].time_ago >= 0:
         finalized_casualty.time_ago = model_predictions[MODEL_2_INDEX].time_ago
-    elif False:
-    # TODO: Add other cases to check if other models have a time_ago greater than zero
-        pass
+    elif model_predictions[MODEL_4_INDEX].time_ago >= 0:
+        finalized_casualty.time_ago = model_predictions[MODEL_2_INDEX].time_ago
     else:
         finalized_casualty.time_ago = 0
 
