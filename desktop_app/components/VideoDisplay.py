@@ -1,11 +1,6 @@
-from PyQt5.QtWidgets    import QGraphicsView
-from PyQt5.QtWidgets    import QGraphicsScene
-from PyQt5.QtWidgets    import QVBoxLayout
-from PyQt5.QtWidgets    import QWidget
-from PyQt5.QtWidgets    import QGraphicsPixmapItem
-from PyQt5.QtGui        import QPixmap, QImage
-from PyQt5.QtCore       import Qt
-
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget, QGraphicsPixmapItem
+from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import Qt
 
 class VideoDisplay(QWidget):
     def __init__(self, parent=None):
@@ -13,16 +8,21 @@ class VideoDisplay(QWidget):
         self.view = QGraphicsView(self)
         self.scene = QGraphicsScene(self)
         self.view.setScene(self.scene)
+
+        # Remove borders and scrollbars
+        self.view.setFrameShape(QGraphicsView.NoFrame)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         
         # Layout
         layout = QVBoxLayout(self)
         layout.addWidget(self.view)
+        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
         self.setLayout(layout)
 
         # Initialize placeholder items
         self.pixmap_item = QGraphicsPixmapItem()
         self.scene.addItem(self.pixmap_item)
-        self.scene.setSceneRect(0, 0, 700, 500)  # Default scene size
 
     def update_image(self, numpy_array):
         """Update the displayed image with a new NumPy array."""
@@ -45,5 +45,16 @@ class VideoDisplay(QWidget):
 
         # Update QGraphicsView
         self.pixmap_item.setPixmap(QPixmap.fromImage(qimage))
+        
+        # Set the scene rect to the size of the image
         self.scene.setSceneRect(0, 0, width, height)
-        self.view.fitInView(self.pixmap_item, Qt.IgnoreAspectRatio)
+        
+        # Resize the QGraphicsView to fit the image size
+        self.view.setFixedSize(width, height)
+        
+        # Resize the container widget to fit the new image size
+        self.setFixedSize(self.view.size())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        
