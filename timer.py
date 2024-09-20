@@ -21,11 +21,12 @@ import time
 import rospy
 
 # ROS messages
-from messages.msg import Command
 from messages.msg import Timer_status
+from messages.msg import Command
+
 
 # general constants
-RUN_DEBUG               = False
+RUN_DEBUG               = True
 BUTTON_TIMER_LENGTH     = 5
 APRILTAG_TIMER_LENGTH   = 10
 PREDICTION_TIMER_LENGTH = 20
@@ -77,10 +78,30 @@ def timer():
         timer_length = PREDICTION_TIMER_LENGTH
 
     # starting timer
+    timer_tracker = 0
+    timer_canceled = False
     system_print("Timer started for " + str(timer_length) + " seconds")
-    time.sleep(timer_length)
-    system_print("Timer ended")
+    while True:
+        # checking if timer is canceled
+        if button_pressed:
+            timer_canceled = True
+            break
 
+        # timer is finished
+        if timer_tracker == int(timer_length/0.2):
+            break
+
+        time.sleep(0.2)
+        timer_tracker += 1
+
+    # time.sleep(timer_length)
+    if timer_canceled:
+        system_print("Timer canceled")
+    else:
+        system_print("Timer ended")
+        # flipping timer
+        flip_current_timer()
+    
     # updating timer message to indicate timer has ended
     timer_status.timer_status = False
 
@@ -94,14 +115,16 @@ def timer():
         timer_length = PREDICTION_TIMER_LENGTH
 
 # updates button_pressed based on the command received
-def handle_command(command):
+def check_button(command):
     system_print("Received command")
     global button_pressed
     global timer_ready
-    if command.chan5 > 0:
+    if command.chan5 > 1600:
+        system_print("Trigger is pressed")
         button_pressed  = True
         timer_ready     = True
     else:
+        system_print("Trigger is not pressed")
         button_pressed = False
 
 # handles starting the timers when the button has not been pressed for BUTTON_TIMER_LENGTH seconds
@@ -118,7 +141,7 @@ def manage_timers():
             break
 
         if button_pressed:
-            # reseting no_pressed_counter
+            # reseting not_pressed_counter
             not_pressed_counter = 0
         elif (not button_pressed) and timer_ready:
             # printing countdown banner
@@ -138,9 +161,6 @@ def manage_timers():
                 # starting timer
                 timer()
 
-                # flipping timer
-                flip_current_timer()
-
                 # updating timer status to ensure button is pressed agin before starting a timer
                 timer_ready = False
 
@@ -148,6 +168,9 @@ def manage_timers():
 
 if __name__ == "__main__":
     if RUN_DEBUG:
+        # registering callback function
+        rospy.Subscriber('/button_status', Command, check_button)
+
         while True:
             # prompting user
             print("---------------------------------------------------------------------")
@@ -196,7 +219,7 @@ if __name__ == "__main__":
                     system_print("\u001b[31mInvalid choice...\u001b[0m")
     else:
         # registering callback function
-        rospy.Subscriber('/button_status', Command, handle_command)
+        rospy.Subscriber('/drone_commands', Command, check_button)
 
         # starting timer sequence
         manage_timers()
