@@ -109,31 +109,40 @@ def post_critical_report(r):
     # printing report
     system_print("Critical report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
-    # sending post request
-    response = requests.post(critical_url, headers = json_headers, json = report)
+    try:
+        # sending post request
+        response = requests.post(critical_url, headers = json_headers, json = report)
+        response.raise_for_status()
 
-    # printing response
-    system_print("Critical report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
+        # printing response
+        system_print("Critical report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ROS msg for response
-    critical_report_response = Critical_report_response()
+        # creating ROS msg for response
+        critical_report_response = Critical_report_response()
 
-    # initializing message
-    critical_report_response.run                  = response.json()["run"]
-    critical_report_response.team                 = response.json()["team"]
-    critical_report_response.user                 = response.json()["user"]
-    critical_report_response.system               = response.json()["system"]
-    critical_report_response.clock                = response.json()["clock"]
-    critical_report_response.report_id            = response.json()["report_id"]
-    critical_report_response.report_timestamp     = response.json()["report_timestamp"]
-    critical_report_response.reports_remaining    = int(response.json()["reports_remaining"])
-    critical_report_response.report_status        = response.json()["report_status"]
-    critical_report_response.casualty_id          = int(response.json()["casualty_id"])
-    critical_report_response.type                 = response.json()["type"]
-    critical_report_response.value                = int(response.json()["value"])
+        # initializing message
+        critical_report_response.run                  = response.json()["run"]
+        critical_report_response.team                 = response.json()["team"]
+        critical_report_response.user                 = response.json()["user"]
+        critical_report_response.system               = response.json()["system"]
+        critical_report_response.clock                = response.json()["clock"]
+        critical_report_response.report_id            = response.json()["report_id"]
+        critical_report_response.report_timestamp     = response.json()["report_timestamp"]
+        critical_report_response.reports_remaining    = int(response.json()["reports_remaining"])
+        critical_report_response.report_status        = response.json()["report_status"]
+        critical_report_response.casualty_id          = int(response.json()["casualty_id"])
+        critical_report_response.type                 = response.json()["type"]
+        critical_report_response.value                = int(response.json()["value"])
 
-    # publishing response to injury report
-    critical_response_pub.publish(critical_report_response)
+        # publishing response to injury report
+        critical_response_pub.publish(critical_report_response)
+                
+    except requests.exceptions.RequestException as errex: 
+        system_print("Exception request")
+        print(BAR + "\n")
+        print(errex)
+        print(BAR)
+    
 
 # posts a vitals report
 def post_vitals_report(r):
@@ -154,32 +163,40 @@ def post_vitals_report(r):
     # printing report
     system_print("Vitals report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
-    # sending post request
-    response = requests.post(vitals_url, headers = json_headers, json = report)
+    try:
+        # sending post request
+        response = requests.post(vitals_url, headers = json_headers, json = report)
+        response.raise_for_status()
 
-    # printing response
-    system_print("Vitals report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
+        # printing response
+        system_print("Vitals report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ROS msg for response
-    vitals_report_response = Vitals_report_response()
+        # creating ROS msg for response
+        vitals_report_response = Vitals_report_response()
 
-    # initializing message
-    vitals_report_response.run                  = response.json()["run"]
-    vitals_report_response.team                 = response.json()["team"]
-    vitals_report_response.user                 = response.json()["user"]
-    vitals_report_response.system               = response.json()["system"]
-    vitals_report_response.clock                = response.json()["clock"]
-    vitals_report_response.report_id            = response.json()["report_id"]
-    vitals_report_response.report_timestamp     = response.json()["report_timestamp"]
-    vitals_report_response.reports_remaining    = int(response.json()["reports_remaining"])
-    vitals_report_response.report_status        = response.json()["report_status"]
-    vitals_report_response.casualty_id          = int(response.json()["casualty_id"])
-    vitals_report_response.type                 = response.json()["type"]
-    vitals_report_response.value                = int(response.json()["value"])
-    vitals_report_response.time_ago             = int(response.json()["time_ago"])
+        # initializing message
+        vitals_report_response.run                  = response.json()["run"]
+        vitals_report_response.team                 = response.json()["team"]
+        vitals_report_response.user                 = response.json()["user"]
+        vitals_report_response.system               = response.json()["system"]
+        vitals_report_response.clock                = response.json()["clock"]
+        vitals_report_response.report_id            = response.json()["report_id"]
+        vitals_report_response.report_timestamp     = response.json()["report_timestamp"]
+        vitals_report_response.reports_remaining    = int(response.json()["reports_remaining"])
+        vitals_report_response.report_status        = response.json()["report_status"]
+        vitals_report_response.casualty_id          = int(response.json()["casualty_id"])
+        vitals_report_response.type                 = response.json()["type"]
+        vitals_report_response.value                = int(response.json()["value"])
+        vitals_report_response.time_ago             = int(response.json()["time_ago"])
 
-    # publishing response to injury report
-    vitals_response_pub.publish(vitals_report_response)
+        # publishing response to injury report
+        vitals_response_pub.publish(vitals_report_response)
+       
+    except requests.exceptions.RequestException as errex: 
+        system_print("Exception request")
+        print(BAR + "\n")
+        print(errex)
+        print(BAR)
 
 # posts a injury report
 def post_injury_report(r):
@@ -199,31 +216,39 @@ def post_injury_report(r):
     # printing report
     system_print("Injury report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
-    # sending post request
-    response = requests.post(injury_url, headers = json_headers, json = report)
+    try:
+        # sending post request
+        response = requests.post(injury_url, headers = json_headers, json = report)
+        response.raise_for_status()
 
-    # printing response
-    system_print("Injury report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
+        # printing response
+        system_print("Injury report response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-    # creating ROS msg for response
-    injury_report_response = Injury_report_response()
+        # creating ROS msg for response
+        injury_report_response = Injury_report_response()
 
-    # initializing message
-    injury_report_response.run                  = response.json()["run"]
-    injury_report_response.team                 = response.json()["team"]
-    injury_report_response.user                 = response.json()["user"]
-    injury_report_response.system               = response.json()["system"]
-    injury_report_response.clock                = response.json()["clock"]
-    injury_report_response.report_id            = response.json()["report_id"]
-    injury_report_response.report_timestamp     = response.json()["report_timestamp"]
-    injury_report_response.reports_remaining    = int(response.json()["reports_remaining"])
-    injury_report_response.report_status        = response.json()["report_status"]
-    injury_report_response.casualty_id          = int(response.json()["casualty_id"])
-    injury_report_response.type                 = response.json()["type"]
-    injury_report_response.value                = int(response.json()["value"])
+        # initializing message
+        injury_report_response.run                  = response.json()["run"]
+        injury_report_response.team                 = response.json()["team"]
+        injury_report_response.user                 = response.json()["user"]
+        injury_report_response.system               = response.json()["system"]
+        injury_report_response.clock                = response.json()["clock"]
+        injury_report_response.report_id            = response.json()["report_id"]
+        injury_report_response.report_timestamp     = response.json()["report_timestamp"]
+        injury_report_response.reports_remaining    = int(response.json()["reports_remaining"])
+        injury_report_response.report_status        = response.json()["report_status"]
+        injury_report_response.casualty_id          = int(response.json()["casualty_id"])
+        injury_report_response.type                 = response.json()["type"]
+        injury_report_response.value                = int(response.json()["value"])
 
-    # publishing response to injury report
-    injury_response_pub.publish(injury_report_response)
+        # publishing response to injury report
+        injury_response_pub.publish(injury_report_response)
+       
+    except requests.exceptions.RequestException as errex: 
+        system_print("Exception request")
+        print(BAR + "\n")
+        print(errex)
+        print(BAR)
 
 #listens for status messages and registers a callback function for the injury
 def listener():
@@ -240,30 +265,38 @@ def listener():
 
 
         # sending get request for status message
-        response = requests.get(status_url, headers = json_headers)
+        try:
+            response = requests.get(status_url, headers = json_headers)
+            response.raise_for_status()
 
-        # printing response from server
-        system_print("Status response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
+            # printing response from server
+            system_print("Status response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-        # creating message to publish
-        status_msg = Status()
-        status_msg.clock                                        = response.json()["clock"]
-        status_msg.team                                         = response.json()["team"]
-        status_msg.user                                         = response.json()["user"]
-        status_msg.remaining_reports.critical.hemorrhage        = response.json()["remaining_reports"]["critical"]["hemorrhage"]
-        status_msg.remaining_reports.critical.distress          = response.json()["remaining_reports"]["critical"]["distress"]
-        status_msg.remaining_reports.vitals.heart               = response.json()["remaining_reports"]["vitals"]["heart"]
-        status_msg.remaining_reports.vitals.respiratory         = response.json()["remaining_reports"]["vitals"]["respiratory"]
-        status_msg.remaining_reports.injury.trauma_head         = response.json()["remaining_reports"]["injury"]["trauma_head"]
-        status_msg.remaining_reports.injury.trauma_torso        = response.json()["remaining_reports"]["injury"]["trauma_torso"]
-        status_msg.remaining_reports.injury.trauma_lower_ext    = response.json()["remaining_reports"]["injury"]["trauma_lower_ext"]
-        status_msg.remaining_reports.injury.trauma_upper_ext    = response.json()["remaining_reports"]["injury"]["trauma_upper_ext"]
-        status_msg.remaining_reports.injury.alertness_ocular    = response.json()["remaining_reports"]["injury"]["alertness_ocular"]
-        status_msg.remaining_reports.injury.alertness_verbal    = response.json()["remaining_reports"]["injury"]["alertness_verbal"]
-        status_msg.remaining_reports.injury.alertness_motor     = response.json()["remaining_reports"]["injury"]["alertness_motor"]
+            # creating message to publish
+            status_msg = Status()
+            status_msg.clock                                        = response.json()["clock"]
+            status_msg.team                                         = response.json()["team"]
+            status_msg.user                                         = response.json()["user"]
+            status_msg.remaining_reports.critical.hemorrhage        = response.json()["remaining_reports"]["critical"]["hemorrhage"]
+            status_msg.remaining_reports.critical.distress          = response.json()["remaining_reports"]["critical"]["distress"]
+            status_msg.remaining_reports.vitals.heart               = response.json()["remaining_reports"]["vitals"]["heart"]
+            status_msg.remaining_reports.vitals.respiratory         = response.json()["remaining_reports"]["vitals"]["respiratory"]
+            status_msg.remaining_reports.injury.trauma_head         = response.json()["remaining_reports"]["injury"]["trauma_head"]
+            status_msg.remaining_reports.injury.trauma_torso        = response.json()["remaining_reports"]["injury"]["trauma_torso"]
+            status_msg.remaining_reports.injury.trauma_lower_ext    = response.json()["remaining_reports"]["injury"]["trauma_lower_ext"]
+            status_msg.remaining_reports.injury.trauma_upper_ext    = response.json()["remaining_reports"]["injury"]["trauma_upper_ext"]
+            status_msg.remaining_reports.injury.alertness_ocular    = response.json()["remaining_reports"]["injury"]["alertness_ocular"]
+            status_msg.remaining_reports.injury.alertness_verbal    = response.json()["remaining_reports"]["injury"]["alertness_verbal"]
+            status_msg.remaining_reports.injury.alertness_motor     = response.json()["remaining_reports"]["injury"]["alertness_motor"]
 
-        # publishing status message
-        status_pub.publish(status_msg)
+            # publishing status message
+            status_pub.publish(status_msg)
+        except requests.exceptions.RequestException as errex: 
+            system_print("Exception request")
+            print(BAR + "\n")
+            print(errex)
+            print(BAR + "\n")
+            
 
         # sleeping to slow the loop down
         time.sleep(5)

@@ -26,7 +26,7 @@ from messages.msg import Command
 
 
 # general constants
-RUN_DEBUG               = True
+RUN_DEBUG               = False
 BUTTON_TIMER_LENGTH     = 5
 APRILTAG_TIMER_LENGTH   = 10
 PREDICTION_TIMER_LENGTH = 20
@@ -119,7 +119,7 @@ def check_button(command):
     system_print("Received command")
     global button_pressed
     global timer_ready
-    if command.chan5 > 1600:
+    if command.chan5 > 0:
         system_print("Trigger is pressed")
         button_pressed  = True
         timer_ready     = True
@@ -219,7 +219,8 @@ if __name__ == "__main__":
                     system_print("\u001b[31mInvalid choice...\u001b[0m")
     else:
         # registering callback function
-        rospy.Subscriber('/drone_commands', Command, check_button)
+        #rospy.Subscriber('/drone_commands', Command, check_button)
+        rospy.Subscriber('/button_status', Command, check_button)
 
         # starting timer sequence
         manage_timers()
