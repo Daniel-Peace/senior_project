@@ -24,14 +24,23 @@ import rospy
 from messages.msg import Timer_status
 from messages.msg import Command
 
-
 # general constants
-RUN_DEBUG               = False
+RUN_DEBUG   = False
+TIMER_TICK  = 0.2
+
+# timer lengths
 BUTTON_TIMER_LENGTH     = 5
 APRILTAG_TIMER_LENGTH   = 10
 PREDICTION_TIMER_LENGTH = 20
+
+# timer types
 APRILTAG_TIMER          = 0
 PREDICTION_TIMER        = 1
+
+# timer states
+TIMER_ENDED  = 0
+TIMER_STARTED    = 1
+TIMER_CANCELED  = 2
 
 # global variables
 button_pressed          = True
@@ -58,68 +67,46 @@ def flip_current_timer():
     elif current_timer == PREDICTION_TIMER:
         current_timer = APRILTAG_TIMER
 
-# starts either a AprilTag timer or a prediction timer depending on timer_type
-def timer():
+# publishes the passed in "timer_status" to the current timer's ROS topic
+def publish_timer_status(timer_status):
     global current_timer
-
-    # creating Timer_status message to indicate timer has started
-    timer_status = Timer_status()
-    timer_status.timer_status = True
-    timer_length = None
-
     # publishing message
-    print("---------------------------------------------------------------------")
     system_print("Publishing timer status message")
     if current_timer == APRILTAG_TIMER:
         apriltag_publisher.publish(timer_status)
-        timer_length = APRILTAG_TIMER_LENGTH
     else:
         prediction_publisher.publish(timer_status)
-        timer_length = PREDICTION_TIMER_LENGTH
 
-    # starting timer
-    timer_tracker = 0
-    timer_canceled = False
-    system_print("Timer started for " + str(timer_length) + " seconds")
+# starts either a AprilTag timer or a prediction timer depending on timer_type
+def timer(timer_length)-> int:
+    current_timer_tick = 0
     while True:
+        # printing time left in
+        if (((current_timer_tick * 0.2) % 1) == 0):
+            system_print("Time left: " + str(int(timer_length - (current_timer_tick * 0.2))))
+
         # checking if timer is canceled
         if button_pressed:
-            timer_canceled = True
-            break
-
+            system_print("Timer canceled")
+            return TIMER_CANCELED
+        
         # timer is finished
-        if timer_tracker == int(timer_length/0.2):
-            break
+        if current_timer_tick == int(timer_length/TIMER_TICK):
+            system_print("Timer ended")
+            return TIMER_ENDED
 
+        # incrementing timer tick
+        current_timer_tick += 1
         time.sleep(0.2)
-        timer_tracker += 1
-
-    # time.sleep(timer_length)
-    if timer_canceled:
-        system_print("Timer canceled")
-    else:
-        system_print("Timer ended")
-        # flipping timer
-        flip_current_timer()
-    
-    # updating timer message to indicate timer has ended
-    timer_status.timer_status = False
-
-    # publishing message
-    system_print("Publishing timer status message")
-    if current_timer == APRILTAG_TIMER:
-        apriltag_publisher.publish(timer_status)
-        timer_length = APRILTAG_TIMER_LENGTH
-    else:
-        prediction_publisher.publish(timer_status)
-        timer_length = PREDICTION_TIMER_LENGTH
 
 # updates button_pressed based on the command received
 def check_button(command):
     system_print("Received command")
     global button_pressed
     global timer_ready
-    if command.chan5 > 0:
+
+    # checking if the trigger is pressed
+    if command.chan8 > 1600:
         system_print("Trigger is pressed")
         button_pressed  = True
         timer_ready     = True
@@ -127,19 +114,24 @@ def check_button(command):
         system_print("Trigger is not pressed")
         button_pressed = False
 
+
+
+
 # handles starting the timers when the button has not been pressed for BUTTON_TIMER_LENGTH seconds
 def manage_timers():
+    system_print("System ready")
+
+    # bringing global variables into this scope
     global button_pressed
     global not_pressed_counter
     global timer_ready
-
-    system_print("System ready")
 
     while True:
         # checking if ctrl-c was entered
         if rospy.is_shutdown():
             break
-
+        
+        # checking if button is pressed
         if button_pressed:
             # reseting not_pressed_counter
             not_pressed_counter = 0
@@ -152,18 +144,36 @@ def manage_timers():
             if (((not_pressed_counter * 0.2) % 1) == 0):
                 print("\t" + str(int((BUTTON_TIMER_LENGTH - (not_pressed_counter * 0.2)) + 0.5)) + " seconds")
 
+            # checking if button timeout has occured
+            if (not_pressed_counter * 0.2) == BUTTON_TIMER_LENGTH:
+                # creating Timer_status object
+                timer_status = Timer_status()
+
+                # publishing timer started status
+                timer_status.timer_status = TIMER_STARTED
+                publish_timer_status(timer_status)
+
+                # starting timer
+                timer_state = None
+                if current_timer == PREDICTION_TIMER:
+                    timer_state = timer(PREDICTION_TIMER_LENGTH)
+                else:
+                    timer_state = timer(APRILTAG_TIMER_LENGTH)
+
+                # checking if the timer ended or was canceled
+                if timer_state == TIMER_ENDED:
+                    timer_status.timer_status = TIMER_ENDED
+                    publish_timer_status(timer_status)
+                    timer_ready = False
+                    flip_current_timer()
+                else:
+                    timer_status.timer_status = TIMER_CANCELED
+                    publish_timer_status(timer_status)
+
             # incrementing not_pressed_counter
             not_pressed_counter += 1
 
-
-            # checking if button timeout has occured
-            if (not_pressed_counter * 0.2) == BUTTON_TIMER_LENGTH:
-                # starting timer
-                timer()
-
-                # updating timer status to ensure button is pressed agin before starting a timer
-                timer_ready = False
-
+        # slowing loop down
         time.sleep(0.2)
 
 if __name__ == "__main__":
