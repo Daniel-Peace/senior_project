@@ -26,7 +26,7 @@ while True:
 
         # validating user input
         if choice.upper() == 'T':
-            command.chan5 = 1
+            command.chan8 = 2000
             publisher.publish(command)
             break
         elif choice.upper() == 'Q':
@@ -48,7 +48,7 @@ while True:
 
         # validating user input
         if choice.upper() == 'T':
-            command.chan5 = -1
+            command.chan8 = 0
             publisher.publish(command)
             break
         elif choice.upper() == 'Q':
