@@ -15,6 +15,11 @@ import time
 from sensor_msgs.msg    import Image
 from messages.msg       import Timer_status
 
+# timer states
+TIMER_ENDED  = 0
+TIMER_STARTED    = 1
+TIMER_CANCELLED  = 2
+
 # initializing node
 rospy.init_node('pick_image', anonymous=True)
 
@@ -40,11 +45,13 @@ def publish_image():
 
 # handles actions corresponding to the timer starting and stopping
 def handle_timer_status(msg):
-    if msg.timer_status == True:
+    if msg.timer_status == TIMER_STARTED:
         system_print("Prediction timer started")
         publish_image()
-    else:
+    elif msg.timer_status == TIMER_ENDED:
         system_print("Prediction timer ended")
+    else:
+        system_print("Prediction timer cancelled")
 
 if __name__ == "__main__":
     print("---------------------------------------------------------------------")

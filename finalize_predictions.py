@@ -81,6 +81,11 @@ from messages.msg import Injury_report
 from messages.msg import Timer_status
 from messages.msg import Vitals_report
 
+# timer states
+TIMER_ENDED     = 0
+TIMER_STARTED   = 1
+TIMER_CANCELLED  = 2
+
 # general constants
 NUM_OF_MODELS       = 6
 DEFAULT_HR          = 100
@@ -118,7 +123,7 @@ for index in range(NUM_OF_MODELS):
 # creating casualty objects for each model to hold predictions
 model_predictions = []
 for index in range(NUM_OF_MODELS):
-        model_predictions.append(Casualty())
+    model_predictions.append(Casualty())
 finalized_casualty  = Casualty()
 
 # holds weights for voting
@@ -429,12 +434,19 @@ def on_timer_start():
     system_print("Timer has started")
     reset()
 
+# handles actions that need to take place when a timer is cancelled
+def on_timer_cancel():
+    system_print("Timer has been cancelled")
+    reset()
+
 # handles actions corresponding to the timer starting and stopping
 def handle_timer_status(timer):
-    if timer.timer_status == True:
+    if timer.timer_status == TIMER_STARTED:
         on_timer_start()
-    else:
+    elif timer.timer_status == TIMER_ENDED:
         on_timer_finish()
+    else:
+        on_timer_cancel()
 
 # gets the assigned AprilTag and sets it
 def assign_apriltag(assigned_apriltag):

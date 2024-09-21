@@ -34,13 +34,13 @@ APRILTAG_TIMER_LENGTH   = 10
 PREDICTION_TIMER_LENGTH = 20
 
 # timer types
-APRILTAG_TIMER          = 0
-PREDICTION_TIMER        = 1
+APRILTAG_TIMER      = 0
+PREDICTION_TIMER    = 1
 
 # timer states
-TIMER_ENDED  = 0
+TIMER_ENDED      = 0
 TIMER_STARTED    = 1
-TIMER_CANCELED  = 2
+TIMER_CANCELLED  = 2
 
 # global variables
 button_pressed          = True
@@ -85,10 +85,10 @@ def timer(timer_length)-> int:
         if (((current_timer_tick * 0.2) % 1) == 0):
             system_print("Time left: " + str(int(timer_length - (current_timer_tick * 0.2))))
 
-        # checking if timer is canceled
+        # checking if timer is cancelled
         if button_pressed:
-            system_print("Timer canceled")
-            return TIMER_CANCELED
+            system_print("Timer cancelled")
+            return TIMER_CANCELLED
         
         # timer is finished
         if current_timer_tick == int(timer_length/TIMER_TICK):
@@ -160,14 +160,14 @@ def manage_timers():
                 else:
                     timer_state = timer(APRILTAG_TIMER_LENGTH)
 
-                # checking if the timer ended or was canceled
+                # checking if the timer ended or was cancelled
                 if timer_state == TIMER_ENDED:
                     timer_status.timer_status = TIMER_ENDED
                     publish_timer_status(timer_status)
                     timer_ready = False
                     flip_current_timer()
                 else:
-                    timer_status.timer_status = TIMER_CANCELED
+                    timer_status.timer_status = TIMER_CANCELLED
                     publish_timer_status(timer_status)
 
             # incrementing not_pressed_counter
