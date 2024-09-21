@@ -36,11 +36,11 @@ BAR         = "-----------------------------------------------------------------
 # network constants
 TEST_HOST   = 'http://0.0.0.0:80'
 HOST        = 'http://10.200.1.100:80'
+ACTIVE_HOST = TEST_HOST
 ENDPOINT_S  = '/api/status'
 ENDPOINT_C  = '/api/critical'
 ENDPOINT_V  = '/api/vitals'
 ENDPOINT_I  = '/api/injury'
-ACTIVE_HOST = TEST_HOST
 
 # bearer tokens
 TEST_TOKEN      = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4M2Q3OGM4ZS04MzhhLTQ0NzctOWM3Yi02N2VmMTZlNWY3MTYiLCJpIjowfQ.i4KuwEtc5_6oIYz5TDWcdzl5bMkvCpLZTSZG2Avy84w'
