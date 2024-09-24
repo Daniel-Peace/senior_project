@@ -135,7 +135,7 @@ func rename_data(path string, name string, img_index int) {
 		//baseName := file.Name()[:len(file.Name())-len(ext)]
 
 		if index%2 == 0 {
-			if ext != ".jpg" {
+			if ext != ".jpg" && ext != ".png" {
 				fmt.Println("system: \x1b[31mERROR - expected png but found", ext[1:])
 				fmt.Println("\x1b[0m")
 				fmt.Println("-------------------------------------------------------------------------------")

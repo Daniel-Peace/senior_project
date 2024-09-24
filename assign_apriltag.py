@@ -85,6 +85,7 @@ def handle_apriltag_timer_status(timer):
         system_print("Timer ended")
         system_print("Final AprilTag: " + str(current_apriltag))
     else:
+        apriltag_timer_started = False
         system_print("Timer cancelled")
         reset()
 

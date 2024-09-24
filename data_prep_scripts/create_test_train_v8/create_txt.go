@@ -154,7 +154,7 @@ func main() {
 
 		if file_counter == 0 {
 
-			if file.Name()[len(file.Name())-3:] == "jpg" {
+			if file.Name()[len(file.Name())-3:] == "jpg" || file.Name()[len(file.Name())-3:] == "png" {
 				// creating empty duplicate of file
 				fmt.Println("\t\x1b[34mcreating file\x1b[0m")
 				current_dest_file, err := os.Create(test_images_folder_path + "/" + file.Name())
@@ -176,6 +176,7 @@ func main() {
 
 			if file.Name()[len(file.Name())-3:] == "txt" {
 				// creating empty duplicate of file
+				fmt.Println("\t\x1b[34mcreating file\x1b[0m")
 				current_dest_file, err := os.Create(test_labels_folder_path + "/" + file.Name())
 				if err != nil {
 					fmt.Print("system: \x1b[31mERROR - ", err)
@@ -196,8 +197,9 @@ func main() {
 			}
 		} else {
 
-			if file.Name()[len(file.Name())-3:] == "jpg" {
+			if file.Name()[len(file.Name())-3:] == "jpg" || file.Name()[len(file.Name())-3:] == "png" {
 				// creating empty duplicate of file
+				fmt.Println("\t\x1b[34mcreating file\x1b[0m")
 				current_dest_file, err := os.Create(train_images_folder_path + "/" + file.Name())
 				if err != nil {
 					fmt.Print("system: \x1b[31mERROR - ", err)
@@ -205,6 +207,7 @@ func main() {
 				}
 
 				// copying contents
+				fmt.Println("\t\x1b[34mcopying file\x1b[0m")
 				_, err = io.Copy(current_dest_file, current_source_file)
 				if err != nil {
 					fmt.Print("system: \x1b[31mERROR - ", err)
@@ -216,6 +219,7 @@ func main() {
 
 			if file.Name()[len(file.Name())-3:] == "txt" {
 				// creating empty duplicate of file
+				fmt.Println("\t\x1b[34mcreating file\x1b[0m")
 				current_dest_file, err := os.Create(train_labels_folder_path + "/" + file.Name())
 				if err != nil {
 					fmt.Print("system: \x1b[31mERROR - ", err)
@@ -223,6 +227,7 @@ func main() {
 				}
 
 				// copying contents
+				fmt.Println("\t\x1b[34mcopying file\x1b[0m")
 				_, err = io.Copy(current_dest_file, current_source_file)
 				if err != nil {
 					fmt.Print("system: \x1b[31mERROR - ", err)
