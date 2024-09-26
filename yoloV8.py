@@ -40,7 +40,7 @@ from ultralytics.utils  import WEIGHTS_DIR
 DEBUG                   = False
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
-WEIGHTS                 = './yoloV8_weights/iteration_2.pt'
+WEIGHTS                 = './yoloV8_weights/iteration_4.pt'
 CONFIDENCE_THRESHOLD    = 0
 MODEL_NUMBER            = 0
 
