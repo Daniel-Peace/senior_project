@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget,
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt
 
-class VideoDisplay(QWidget):
+class VideoView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.view = QGraphicsView(self)
