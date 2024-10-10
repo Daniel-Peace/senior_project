@@ -8,6 +8,7 @@ from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QTimer, pyqtSignal, QObject
 
 from messages.msg import Assigned_apriltag
+from apriltag_ros.msg   import AprilTagDetection, AprilTagDetectionArray
 
 from components         import MainWindow
 # ------------------------------------------------------------------------------------------------------
@@ -34,6 +35,9 @@ def handle_assigned_apriltag(apriltag):
     id = apriltag.apriltag
     communicator.update_id_signal.emit(str(id))
 
+def handle_detected_apriltags(msg):
+    pass
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -44,9 +48,10 @@ if __name__ == "__main__":
 
     communicator = Communicator()
     communicator.update_image_signal.connect(window.graphics_display.update_image)
-    communicator.update_id_signal.connect(window.card1.description_label.update_text)
+    # communicator.update_id_signal.connect(window.card1.description_label.update_text)
 
     rospy.Subscriber('usb_cam/image_raw', Image, handle_incoming_images)
+    rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_detected_apriltags)
     rospy.Subscriber('assigned_apriltag', Assigned_apriltag, handle_assigned_apriltag)
 
     timer = QTimer()
