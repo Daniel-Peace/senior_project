@@ -23,6 +23,7 @@ import rospy
 # ROS messages
 from messages.msg import Timer_status
 from messages.msg import Command
+from messages.msg import Current_timer
 
 # general constants
 RUN_DEBUG   = False
@@ -34,8 +35,14 @@ APRILTAG_TIMER_LENGTH   = 10
 PREDICTION_TIMER_LENGTH = 20
 
 # timer types
-APRILTAG_TIMER      = 0
-PREDICTION_TIMER    = 1
+APRILTAG_COUNTDOWN      = 0
+APRILTAG_TIMER          = 1
+PREDICTION_COUNTDOWN    = 2
+PREDICTION_TIMER        = 3
+
+# indexing directions
+INDEX_FORWARD   = 1
+INDEX_BACKWARD  = 0
 
 # timer states
 TIMER_ENDED      = 0
@@ -52,8 +59,11 @@ current_timer           = 0
 rospy.init_node('prediction_timer_node', anonymous=True)
 
 # creating ROS topic and publisher
-apriltag_publisher      = rospy.Publisher('apriltag_timer_status', Timer_status, queue_size=10)
-prediction_publisher    = rospy.Publisher('prediction_timer_status', Timer_status, queue_size=10)
+apriltag_countdown_publisher    = rospy.Publisher('apriltag_countdown_status', Timer_status, queue_size=10)
+apriltag_timer_publisher        = rospy.Publisher('apriltag_timer_status', Timer_status, queue_size=10)
+prediction_countdown_publisher  = rospy.Publisher('prediction_countdown_status', Timer_status, queue_size=10)
+prediction_timer_publisher      = rospy.Publisher('prediction_timer_status', Timer_status, queue_size=10)
+current_timer_publisher         = rospy.Publisher('current_timer', Current_timer, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -67,32 +77,51 @@ def flip_current_timer():
     elif current_timer == PREDICTION_TIMER:
         current_timer = APRILTAG_TIMER
 
+def index_timer(direction):
+    global current_timer
+    if direction == 0:
+        current_timer = (current_timer + 3) % 4
+    else:
+        current_timer = (current_timer + 1) % 4
+
 # publishes the passed in "timer_status" to the current timer's ROS topic
 def publish_timer_status(timer_status):
     global current_timer
     # publishing message
     system_print("Publishing timer status message")
-    if current_timer == APRILTAG_TIMER:
-        apriltag_publisher.publish(timer_status)
+    if current_timer == APRILTAG_COUNTDOWN:
+        apriltag_countdown_publisher.publish(timer_status)
+    elif current_timer == APRILTAG_TIMER:
+        apriltag_timer_publisher.publish(timer_status)
+    elif current_timer == PREDICTION_COUNTDOWN:
+        prediction_countdown_publisher.publish(timer_status)
     else:
-        prediction_publisher.publish(timer_status)
+        prediction_timer_publisher.publish(timer_status)
 
 # starts either a AprilTag timer or a prediction timer depending on timer_type
 def timer(timer_length)-> int:
     current_timer_tick = 0
+    timer_status = Timer_status()
+    timer_status.timer_status = TIMER_STARTED
     while True:
         # printing time left in
         if (((current_timer_tick * 0.2) % 1) == 0):
             system_print("Time left: " + str(int(timer_length - (current_timer_tick * 0.2))))
+            timer_status.time_left = int(timer_length - (current_timer_tick * 0.2))
+            publish_timer_status(timer_status)
 
         # checking if timer is cancelled
         if button_pressed:
             system_print("Timer cancelled")
+            timer_status.timer_status = TIMER_CANCELLED
+            publish_timer_status(timer_status)
             return TIMER_CANCELLED
         
         # timer is finished
         if current_timer_tick == int(timer_length/TIMER_TICK):
             system_print("Timer ended")
+            timer_status.timer_status = TIMER_ENDED
+            publish_timer_status(timer_status)
             return TIMER_ENDED
 
         # incrementing timer tick
@@ -114,9 +143,6 @@ def check_button(command):
         system_print("Trigger is not pressed")
         button_pressed = False
 
-
-
-
 # handles starting the timers when the button has not been pressed for BUTTON_TIMER_LENGTH seconds
 def manage_timers():
     system_print("System ready")
@@ -126,55 +152,48 @@ def manage_timers():
     global not_pressed_counter
     global timer_ready
 
+    current_timer_msg = Current_timer()
+    current_timer_msg.current_timer = current_timer
+    current_timer_publisher.publish(current_timer_msg)
+    
     while True:
         # checking if ctrl-c was entered
         if rospy.is_shutdown():
             break
         
-        # checking if button is pressed
-        if button_pressed:
-            # reseting not_pressed_counter
-            not_pressed_counter = 0
-        elif (not button_pressed) and timer_ready:
-            # printing countdown banner
-            if not_pressed_counter == 0:
-                system_print("starting timer in:")
+        # checking if the button is not being pressed
+        if (not button_pressed) and timer_ready:
+            # starting countdown timer for 
+            timer_state = timer(BUTTON_TIMER_LENGTH)
 
-            # printing countdown
-            if (((not_pressed_counter * 0.2) % 1) == 0):
-                print("\t" + str(int((BUTTON_TIMER_LENGTH - (not_pressed_counter * 0.2)) + 0.5)) + " seconds")
+            # checking if the timer ended
+            if timer_state == TIMER_ENDED:
+                # indexing to the next timer
+                index_timer(INDEX_FORWARD)
+                current_timer_msg.current_timer = current_timer
+                current_timer_publisher.publish(current_timer_msg)
 
-            # checking if button timeout has occured
-            if (not_pressed_counter * 0.2) == BUTTON_TIMER_LENGTH:
-                # creating Timer_status object
-                timer_status = Timer_status()
-
-                # publishing timer started status
-                timer_status.timer_status = TIMER_STARTED
-                publish_timer_status(timer_status)
-
-                # starting timer
-                timer_state = None
-                if current_timer == PREDICTION_TIMER:
-                    timer_state = timer(PREDICTION_TIMER_LENGTH)
-                else:
+                # checking what the current timer is
+                if current_timer == APRILTAG_TIMER:
+                    # starting AprilTag timer
                     timer_state = timer(APRILTAG_TIMER_LENGTH)
-
-                # checking if the timer ended or was cancelled
-                if timer_state == TIMER_ENDED:
-                    timer_status.timer_status = TIMER_ENDED
-                    publish_timer_status(timer_status)
-                    timer_ready = False
-                    flip_current_timer()
                 else:
-                    timer_status.timer_status = TIMER_CANCELLED
-                    publish_timer_status(timer_status)
+                    # starting prediction timer
+                    timer_state = timer(PREDICTION_TIMER_LENGTH)
 
-            # incrementing not_pressed_counter
-            not_pressed_counter += 1
+                # checking if timer ended
+                if timer_state == TIMER_ENDED:
+                    timer_ready = False
+                    index_timer(INDEX_FORWARD)
+                    current_timer_msg.current_timer = current_timer
+                    current_timer_publisher.publish(current_timer_msg)
+                else:
+                    index_timer(INDEX_BACKWARD)
+                    current_timer_msg.current_timer = current_timer
+                    current_timer_publisher.publish(current_timer_msg)
 
         # slowing loop down
-        time.sleep(0.2)
+        time.sleep(0.2)       
 
 if __name__ == "__main__":
     if RUN_DEBUG:
@@ -232,5 +251,6 @@ if __name__ == "__main__":
         #rospy.Subscriber('/drone_commands', Command, check_button)
         rospy.Subscriber('/button_status', Command, check_button)
 
+        time.sleep(0.5)
         # starting timer sequence
         manage_timers()
