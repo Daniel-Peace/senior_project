@@ -39,10 +39,10 @@ class MainWindow2(QMainWindow):
         self.timerHboxLayout.addWidget(self.aprilTagCountdownCard)
         self.aprilTagTimerCard = CardWidget('AprilTag\nTimer', '--')
         self.timerHboxLayout.addWidget(self.aprilTagTimerCard)
-        self.aprilTagCountdownCard = CardWidget('Prediction\nCountdown', '--')
-        self.timerHboxLayout.addWidget(self.aprilTagCountdownCard)
-        self.aprilTagTimerCard = CardWidget('Prediction\nTimer', '--')
-        self.timerHboxLayout.addWidget(self.aprilTagTimerCard)
+        self.predictionCountdownCard = CardWidget('Prediction\nCountdown', '--')
+        self.timerHboxLayout.addWidget(self.predictionCountdownCard)
+        self.predictionTimerCard = CardWidget('Prediction\nTimer', '--')
+        self.timerHboxLayout.addWidget(self.predictionTimerCard)
         self.leftVboxLayout.addLayout(self.timerHboxLayout)
 
         # creating and adding the VideoWidget
