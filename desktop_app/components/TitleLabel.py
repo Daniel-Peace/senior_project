@@ -14,3 +14,6 @@ class TitleLabel(QLabel):
 
     def updateText(self, text):
         self.setText(text)
+
+    def updateColor(self, color):
+        self.setStyleSheet(f"color: {color};")
