@@ -31,3 +31,11 @@ class CardWidget(QWidget):
     # updates the body label
     def updateBody(self, title):
         self.bodyLabel.updateText(title)
+
+    def updateBackgroundColor(self, color):
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setStyleSheet(f"background-color: {color};"'border-radius: 5px;')
+    
+    def updateTextColor(self, color):
+        self.titleLabel.updateColor(color)
+        self.bodyLabel.updateColor(color)
