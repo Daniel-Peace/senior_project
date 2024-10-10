@@ -26,6 +26,7 @@ add_message_files(
   Casualty_prediction.msg
   Pinned_apriltag.msg
   Command.msg
+  Current_timer.msg
 )
 
 include_directories(
