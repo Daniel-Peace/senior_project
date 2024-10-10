@@ -4,3 +4,4 @@
 # 2 means the timer was canceled
 
 int32 timer_status
+int32 time_left
