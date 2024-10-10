@@ -8,8 +8,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
 from components import CustomLabel
-from components import VideoDisplay
-from components import CardWidget
+from components import VideoView
+from components import CardWidgetOld
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -28,20 +28,20 @@ class MainWindow(QMainWindow):
         vbox_layout_left = QVBoxLayout()
 
         # Create and add the GraphicsDisplay widget
-        self.graphics_display = VideoDisplay(self)
+        self.graphics_display = VideoView(self)
         vbox_layout_left.addWidget(self.graphics_display)
 
         # Create a horizontal layout
         hbox_layout = QHBoxLayout()
 
         # Add widgets to the horizontal layout
-        self.card1 = CardWidget("AprilTag ID", "NA")
+        self.card1 = CardWidgetOld("AprilTag ID", "NA")
         hbox_layout.addWidget(self.card1)
-        self.card2 = CardWidget("AprilTag ID", "NA")
+        self.card2 = CardWidgetOld("AprilTag ID", "NA")
         hbox_layout.addWidget(self.card2)
-        self.card3 = CardWidget("AprilTag ID", "NA")
+        self.card3 = CardWidgetOld("AprilTag ID", "NA")
         hbox_layout.addWidget(self.card3)
-        self.card4 = CardWidget("AprilTag ID", "NA")
+        self.card4 = CardWidgetOld("AprilTag ID", "NA")
         hbox_layout.addWidget(self.card4)
 
         # Add the horizontal layout to the vertical layout
@@ -136,13 +136,7 @@ class MainWindow(QMainWindow):
 
         # Adding vbox layout to main hbox
         main_layout.addLayout(vbox_layout_right)
-
         
-
-        
-
-        
-
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #282C32;  /* Light gray background */
