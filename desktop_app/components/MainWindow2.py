@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
-from components         import VideoView, CardWidget
+from components         import VideoView, CardWidget, LogWidget
 
 class MainWindow2(QMainWindow):
     def __init__(self):
@@ -49,9 +49,21 @@ class MainWindow2(QMainWindow):
         self.videoView = VideoView(self)
         self.leftVboxLayout.addWidget(self.videoView)
 
+        # creating bottom hbox to hold other info cards
+        self.infoHboxLayout = QHBoxLayout()
+
+        # creating and adding current AprilTag detections card
+        self.currentDetections = CardWidget('Current Apriltag\nDetections', 'id: --')
+        self.infoHboxLayout.addWidget(self.currentDetections)
+
+        # adding bottom infoHboxLayout to leftVboxLayout
+        self.leftVboxLayout.addLayout(self.infoHboxLayout)
+
         # -------------------------------------------------------
         # ADD COMPONENTS TO LEFT LAYOUT HERE
         # -------------------------------------------------------
+        self.log = LogWidget()
+        self.rightVboxLayout.addWidget(self.log)
 
 
 
