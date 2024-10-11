@@ -20,6 +20,9 @@ TIMER_ENDED  = 0
 TIMER_STARTED    = 1
 TIMER_CANCELLED  = 2
 
+# global variables
+previous_timer_status = -1
+
 # initializing node
 rospy.init_node('pick_image', anonymous=True)
 
@@ -45,13 +48,16 @@ def publish_image():
 
 # handles actions corresponding to the timer starting and stopping
 def handle_timer_status(msg):
-    if msg.timer_status == TIMER_STARTED:
-        system_print("Prediction timer started")
-        publish_image()
-    elif msg.timer_status == TIMER_ENDED:
-        system_print("Prediction timer ended")
-    else:
-        system_print("Prediction timer cancelled")
+    global previous_timer_status
+    if previous_timer_status != msg.timer_status:
+        previous_timer_status = msg.timer_status
+        if msg.timer_status == TIMER_STARTED:
+            system_print("Prediction timer started")
+            publish_image()
+        elif msg.timer_status == TIMER_ENDED:
+            system_print("Prediction timer ended")
+        else:
+            system_print("Prediction timer cancelled")
 
 if __name__ == "__main__":
     print("---------------------------------------------------------------------")
