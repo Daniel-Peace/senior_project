@@ -21,7 +21,7 @@ from sys                import getallocatedblocks
 # ROS messages
 from messages.msg       import Assigned_apriltag
 from messages.msg       import Timer_status
-from apriltag_ros.msg   import AprilTagDetection, AprilTagDetectionArray
+from apriltag_ros.msg   import AprilTagDetectionArray
 
 # timer states
 TIMER_ENDED  = 0
@@ -32,6 +32,7 @@ TIMER_CANCELLED  = 2
 current_apriltag        = -1
 current_distance        = 999
 apriltag_timer_started  = False
+previous_timer_status = -1
 
 # initializing node
 rospy.init_node('assign_apriltag', anonymous=True)
@@ -74,40 +75,48 @@ def update_current_apriltag(april_tag_detections):
 # handles actions that take place on timer start and stop
 def handle_apriltag_timer_status(timer):
     global apriltag_timer_started
-    if timer.timer_status == TIMER_STARTED:
-        system_print("Timer started")
-        reset()
-        apriltag_timer_started = True
-        system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
-    elif timer.timer_status == TIMER_ENDED:
-        apriltag_timer_started = False
-        system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
-        system_print("Timer ended")
-        system_print("Final AprilTag: " + str(current_apriltag))
-    else:
-        apriltag_timer_started = False
-        system_print("Timer cancelled")
-        reset()
+    global previous_timer_status
+    if previous_timer_status != timer.timer_status:
+        previous_timer_status = timer.timer_status
+        if timer.timer_status == TIMER_STARTED:
+            system_print("Timer started")
+            reset()
+            apriltag_timer_started = True
+            system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
+        elif timer.timer_status == TIMER_ENDED:
+            apriltag_timer_started = False
+            system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
+            system_print("Timer ended")
+            system_print("Final AprilTag: " + str(current_apriltag))
+        else:
+            apriltag_timer_started = False
+            system_print("Timer cancelled")
+            reset()
 
 # publishes current AprilTag whent the prediction timer ends
 def handle_prediction_timer_status(timer):
-    # checking if the prediction timer started
-    if timer.timer_status == TIMER_STARTED:
-        system_print("Prediction timer started")
+    global previous_timer_status
 
-        # creating ROS message
-        assigned_apriltag = Assigned_apriltag()
+    if previous_timer_status != timer.timer_status:
+        previous_timer_status = timer.timer_status
 
-        # initializing the message
-        assigned_apriltag.apriltag = current_apriltag
+        # checking if the prediction timer started
+        if timer.timer_status == TIMER_STARTED:
+            system_print("Prediction timer started")
 
-        # publishing the current AprilTag
-        system_print("Publishing current AprilTag")
-        publisher.publish(assigned_apriltag)
-    elif timer.timer_status == TIMER_ENDED:
-        system_print("Prediction timer ended")
-    else:
-        system_print("Timer cancelled")
+            # creating ROS message
+            assigned_apriltag = Assigned_apriltag()
+
+            # initializing the message
+            assigned_apriltag.apriltag = current_apriltag
+
+            # publishing the current AprilTag
+            system_print("Publishing current AprilTag")
+            publisher.publish(assigned_apriltag)
+        elif timer.timer_status == TIMER_ENDED:
+            system_print("Prediction timer ended")
+        else:
+            system_print("Timer cancelled")
 
 if __name__ == "__main__":
     print("---------------------------------------------------------------------")
