@@ -16,12 +16,10 @@ class CardWidget(QWidget):
         
         # creating and adding title label
         self.titleLabel = TitleLabel(title)
-        # self.titleLabel.setStyleSheet("background-color: transparent;")
         mainLayout.addWidget(self.titleLabel)
 
         # creating and adding title label
         self.bodyLabel = BodyLabel(body)
-        # self.bodyLabel.setStyleSheet("background-color: transparent;")
         mainLayout.addWidget(self.bodyLabel)
 
     # updates the title label

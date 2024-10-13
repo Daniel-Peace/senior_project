@@ -37,7 +37,7 @@ from messages.msg       import Casualty_prediction
 from ultralytics.utils  import WEIGHTS_DIR
 
 # general constants
-DEBUG                   = False
+DEBUG                   = True
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
 WEIGHTS                 = './yoloV8_weights/iteration_4.pt'

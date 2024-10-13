@@ -12,3 +12,4 @@ int32 alertness_motor
 int32 time_ago
 int32 model
 bool is_coherent
+int32 apriltag

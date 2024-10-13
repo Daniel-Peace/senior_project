@@ -4,11 +4,12 @@ import cv2
 import numpy as np
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Assigned_apriltag
+from messages.msg       import Timer_status, Current_timer, Assigned_apriltag, Casualty_prediction
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
 from components         import MainWindow2
+from ..casualty         import Casualty
 
 # creates signals for updating UI
 class Communicator(QObject):
@@ -29,6 +30,7 @@ class Communicator(QObject):
     updateBackgroundPredictionTimer     = pyqtSignal(str)
     updateTextColorPredictionTimer      = pyqtSignal(str)
     updateCurrentTagDetections          = pyqtSignal(str)
+    updateCurrentPredictions            = pyqtSignal(Casualty)
 
 
 # -------------------------------------------------------
@@ -153,6 +155,24 @@ def handle_current_tag_detections(msg):
         detectionList += "id: --"
 
     communicator.updateCurrentTagDetections.emit(detectionList)
+
+def handle_finalized_reports(msg:Casualty_prediction):
+    casualty = Casualty()
+    casualty.apriltag               = msg.apriltag
+    casualty.is_coherent            = msg.is_coherent
+    casualty.time_ago               = msg.time_ago
+    casualty.severe_hemorrhage      = msg.severe_hemorrhage
+    casualty.respiratory_distress   = msg.respiratory_distress
+    casualty.heart_rate             = msg.heart_rate
+    casualty.respiratory_rate       = msg.respiratory_rate
+    casualty.trauma_head            = msg.trauma_head
+    casualty.trauma_torso           = msg.trauma_torso
+    casualty.trauma_lower_ext       = msg.trauma_lower_ext
+    casualty.trauma_upper_ext       = msg.trauma_upper_ext
+    casualty.alertness_ocular       = msg.alertness_ocular
+    casualty.alertness_verbal       = msg.alertness_verbal
+    casualty.alertness_motor        = msg.alertness_motor
+    communicator.updateCurrentPredictions.emit(casualty)
     
 
 # "main function"
@@ -193,6 +213,7 @@ if __name__ == "__main__":
     communicator.updateBackgroundPredictionTimer.connect(window.predictionTimerCard.updateBackgroundColor)
     communicator.updateTextColorPredictionTimer.connect(window.predictionTimerCard.updateTextColor)
     communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBody)
+    communicator.updateCurrentPredictions.connect(window.predictions.updateReportValues)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
@@ -204,6 +225,7 @@ if __name__ == "__main__":
     rospy.Subscriber('prediction_timer_status', Timer_status, handle_prediction_timer)
     rospy.Subscriber('current_timer', Current_timer, handle_current_timer)
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
+    rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
 
     # pausing to allow ROS callback function and the UI to sync
     timer = QTimer()

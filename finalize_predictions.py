@@ -115,6 +115,9 @@ apriltag = -1
 # tracks if an april tag has been assigned to the current casualty
 received_april = False
 
+# tracks the previous state of the timer
+previous_timer_status = -1
+
 # holds tracking values for if a model has published a submission yet
 prediction_received = []
 for index in range(NUM_OF_MODELS):
@@ -143,6 +146,8 @@ model_weights.append(weight)
 
 # initializing node
 rospy.init_node('vote_and_create', anonymous=True)
+
+final_report_publisher = rospy.Publisher('final_report', Casualty_prediction, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -196,6 +201,22 @@ def publish_reports():
     system_print("Publishing reports")
     print("------------------------------------------------------")
     finalized_casualty.publish_reports()
+    final_report = Casualty_prediction()
+    final_report.apriltag               = finalized_casualty.apriltag
+    final_report.is_coherent            = finalized_casualty.is_coherent
+    final_report.time_ago               = finalized_casualty.time_ago
+    final_report.severe_hemorrhage      = finalized_casualty.severe_hemorrhage
+    final_report.respiratory_distress   = finalized_casualty.respiratory_distress
+    final_report.heart_rate             = finalized_casualty.heart_rate
+    final_report.respiratory_rate       = finalized_casualty.respiratory_rate
+    final_report.trauma_head            = finalized_casualty.trauma_head
+    final_report.trauma_torso           = finalized_casualty.trauma_torso
+    final_report.trauma_lower_ext       = finalized_casualty.trauma_lower_ext
+    final_report.trauma_upper_ext       = finalized_casualty.trauma_upper_ext
+    final_report.alertness_ocular       = finalized_casualty.alertness_ocular
+    final_report.alertness_verbal       = finalized_casualty.alertness_verbal
+    final_report.alertness_motor        = finalized_casualty.alertness_motor
+    final_report_publisher.publish(final_report)
 
 # handles combining and finalizing reports
 def finalize_afflication_values():
@@ -441,12 +462,15 @@ def on_timer_cancel():
 
 # handles actions corresponding to the timer starting and stopping
 def handle_timer_status(timer):
-    if timer.timer_status == TIMER_STARTED:
-        on_timer_start()
-    elif timer.timer_status == TIMER_ENDED:
-        on_timer_finish()
-    else:
-        on_timer_cancel()
+    global previous_timer_status
+    if previous_timer_status != timer.timer_status:
+        previous_timer_status = timer.timer_status
+        if timer.timer_status == TIMER_STARTED:
+            on_timer_start()
+        elif timer.timer_status == TIMER_ENDED:
+            on_timer_finish()
+        else:
+            on_timer_cancel()
 
 # gets the assigned AprilTag and sets it
 def assign_apriltag(assigned_apriltag):

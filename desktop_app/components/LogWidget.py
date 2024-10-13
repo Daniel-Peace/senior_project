@@ -17,27 +17,17 @@ class LogWidget(QWidget):
         self.setStyleSheet('background-color: #2F343E;''border-radius: 5px;')
 
         # creating and adding titleLabel
-        self.title = TitleLabel("Logs\n------------------------")
-        self.title.setMaximumHeight(30)
+        self.title = TitleLabel("Logs")
+        self.title.setMaximumHeight(40)
         self.setMinimumWidth(300)
         mainLayout.addWidget(self.title)
 
         # creating and adding editText
         self.textBox = QTextEdit(self)
         self.textBox.setReadOnly(True)
-        self.textBox.setStyleSheet(f"color: #ADB2BD;")
+        self.textBox.setStyleSheet(f"color: #ADB2BD;background-color: #42474f;")
         self.textBox.setFont(QFont("Monospace", 12))
         mainLayout.addWidget(self.textBox)
-
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-        self.appendMessage("test log showing a lot of data regarding nothing since I just need to test how this works. Checking 0 real quick")
-
 
     def appendMessage(self,msg):
         self.textBox.append('<font color="#80ABE4">[-] </font>' + msg + '<br>')

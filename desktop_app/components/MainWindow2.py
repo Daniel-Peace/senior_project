@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
-from components         import VideoView, CardWidget, LogWidget
+from components         import VideoView, CardWidget, LogWidget, PredictionWidget
 
 class MainWindow2(QMainWindow):
     def __init__(self):
@@ -62,8 +62,18 @@ class MainWindow2(QMainWindow):
         # -------------------------------------------------------
         # ADD COMPONENTS TO LEFT LAYOUT HERE
         # -------------------------------------------------------
+
+        self.rightHbox = QHBoxLayout()
+
+        # adding final prediction widget
+        self.predictions = PredictionWidget(title="Final Predictions")
+        self.rightHbox.addWidget(self.predictions)
+
+        # adding log widget
         self.log = LogWidget()
-        self.rightVboxLayout.addWidget(self.log)
+        self.rightHbox.addWidget(self.log)
+
+        self.rightVboxLayout.addLayout(self.rightHbox)
 
 
 
