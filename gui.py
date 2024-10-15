@@ -8,8 +8,8 @@ from messages.msg       import Timer_status, Current_timer, Assigned_apriltag, C
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
-from components         import MainWindow2
-from ..casualty         import Casualty
+from components         import MainWindow
+from casualty           import Casualty
 
 # creates signals for updating UI
 class Communicator(QObject):
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # creating main window
-    window = MainWindow2()
+    window = MainWindow()
 
     # creating communicator object facilitates the use of signals
     communicator = Communicator()

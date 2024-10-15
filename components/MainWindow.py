@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
 from components         import VideoView, CardWidget, LogWidget, PredictionWidget
 
-class MainWindow2(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         # initializing parent object
         super().__init__()

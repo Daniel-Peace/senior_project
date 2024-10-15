@@ -202,7 +202,7 @@ def publish_reports():
     print("------------------------------------------------------")
     finalized_casualty.publish_reports()
     final_report = Casualty_prediction()
-    final_report.apriltag               = finalized_casualty.apriltag
+    final_report.apriltag               = apriltag
     final_report.is_coherent            = finalized_casualty.is_coherent
     final_report.time_ago               = finalized_casualty.time_ago
     final_report.severe_hemorrhage      = finalized_casualty.severe_hemorrhage

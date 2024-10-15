@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets    import QWidget, QVBoxLayout
 from PyQt5.QtCore       import Qt
-from components         import TitleLabel, BodyLabel, Casualty
+from components         import TitleLabel, BodyLabel
+from casualty           import Casualty
 
 class PredictionWidget(QWidget):
     def __init__(
@@ -113,19 +114,19 @@ class PredictionWidget(QWidget):
 
     def updateReportValues(self, casualty:Casualty):
         self.apriltag.updateText("AprilTag: " + str(casualty.apriltag))
-        self.isCoherent.updateText("AprilTag: " + str(casualty.is_coherent))
-        self.timeAgo.updateText("AprilTag: " + str(casualty.time_ago))
-        self.severeHemorrhage.updateText("AprilTag: " + str(casualty.severe_hemorrhage))
-        self.respiratoryDistress.updateText("AprilTag: " + str(casualty.respiratory_distress))
-        self.heartRate.updateText("AprilTag: " + str(casualty.heart_rate))
-        self.respiratoryRate.updateText("AprilTag: " + str(casualty.respiratory_rate))
-        self.traumaHead.updateText("AprilTag: " + str(casualty.trauma_head))
-        self.traumaTorso.updateText("AprilTag: " + str(casualty.trauma_torso))
-        self.traumaLowerExt.updateText("AprilTag: " + str(casualty.trauma_lower_ext))
-        self.traumaUpperExt.updateText("AprilTag: " + str(casualty.trauma_upper_ext))
-        self.alertnessOcular.updateText("AprilTag: " + str(casualty.alertness_ocular))
-        self.alertnessVerbal.updateText("AprilTag: " + str(casualty.alertness_verbal))
-        self.alertnessMotor.updateText("AprilTag: " + str(casualty.alertness_motor))
+        self.isCoherent.updateText("Is Coherent: " + str(casualty.is_coherent))
+        self.timeAgo.updateText("Time Ago: " + str(casualty.time_ago))
+        self.severeHemorrhage.updateText("Severe Hemorrhage: " + str(casualty.severe_hemorrhage))
+        self.respiratoryDistress.updateText("Respiratory Distress: " + str(casualty.respiratory_distress))
+        self.heartRate.updateText("Heart Rate: " + str(casualty.heart_rate))
+        self.respiratoryRate.updateText("Respiratory Rate: " + str(casualty.respiratory_rate))
+        self.traumaHead.updateText("Trauma Head: " + str(casualty.trauma_head))
+        self.traumaTorso.updateText("Trauma Torso: " + str(casualty.trauma_torso))
+        self.traumaLowerExt.updateText("Trauma Lower Ext: " + str(casualty.trauma_lower_ext))
+        self.traumaUpperExt.updateText("Trauma Upper Ext: " + str(casualty.trauma_upper_ext))
+        self.alertnessOcular.updateText("Alertness Ocular: " + str(casualty.alertness_ocular))
+        self.alertnessVerbal.updateText("Alertness Verbal: " + str(casualty.alertness_verbal))
+        self.alertnessMotor.updateText("Alertness Motor: " + str(casualty.alertness_motor))
 
     # updates the background color of the card
     def updateBackgroundColor(self, color):
