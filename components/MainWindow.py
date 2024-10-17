@@ -55,6 +55,10 @@ class MainWindow(QMainWindow):
         self.currentDetections = CardWidget('Current Apriltag\nDetections', 'id: --')
         self.infoHboxLayout.addWidget(self.currentDetections)
 
+        # creating and adding current AprilTag detections card
+        self.modelPredictionStatuses = CardWidget('Model Prediction Status:', '--')
+        self.infoHboxLayout.addWidget(self.modelPredictionStatuses)
+
         # adding bottom infoHboxLayout to leftVboxLayout
         self.leftVboxLayout.addLayout(self.infoHboxLayout)
         # -------------------------------------------------------
