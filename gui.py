@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Casualty_prediction
+from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
@@ -35,6 +35,7 @@ class Communicator(QObject):
     updateCurrentTagDetections          = pyqtSignal(str)
     updateCurrentPredictions            = pyqtSignal(Casualty)
     updateReportList                    = pyqtSignal(str, Casualty)
+    updateModelReportStatuses           = pyqtSignal(str)
 
 
 # -------------------------------------------------------
@@ -181,6 +182,13 @@ def handle_finalized_reports(msg:Casualty_prediction):
     reportTitle = "Report " + str(reportNumber)
     reportNumber += 1
     communicator.updateReportList.emit(reportTitle, casualty)
+
+def handle_model_prediction_statuses(msg:ModelPredictionStatuses):
+    status_list = ""
+    for model_prediction_status in msg.modelPredictionStatuses:
+        status_list += "Model " + str(model_prediction_status.model_number) + ": " + str(model_prediction_status.made_prediction) + "\n"
+
+    communicator.updateModelReportStatuses.emit(status_list)
     
 # "main function"
 if __name__ == "__main__":
@@ -217,6 +225,7 @@ if __name__ == "__main__":
     communicator.updateCurrentPredictions.connect(window.predictions.updateReportValues)
     communicator.updateReportList.connect(window.reportList.list.addItemToList)
     window.reportList.list.itemClicked.connect(window.predictions.updateOnClick)
+    communicator.updateModelReportStatuses.connect(window.modelPredictionStatuses.updateBody)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
@@ -229,6 +238,7 @@ if __name__ == "__main__":
     rospy.Subscriber('current_timer', Current_timer, handle_current_timer)
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
     rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
+    rospy.Subscriber('model_prediction_statuses', ModelPredictionStatuses, handle_model_prediction_statuses)
 
     # showing main window
     window.show()
