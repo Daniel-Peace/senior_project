@@ -17,3 +17,4 @@ class ReportList(QListWidget):
         item = QListWidgetItem(name)
         item.setData(Qt.UserRole, casualty)
         self.addItem(item)
+        item.setSelected(True)
