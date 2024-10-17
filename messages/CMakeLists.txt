@@ -27,6 +27,8 @@ add_message_files(
   Pinned_apriltag.msg
   Command.msg
   Current_timer.msg
+  ModelPredictionStatus.msg
+  ModelPredictionStatuses.msg
 )
 
 include_directories(

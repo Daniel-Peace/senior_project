@@ -1,0 +1,2 @@
+int32 model_number
+bool made_prediction
