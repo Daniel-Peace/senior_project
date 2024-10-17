@@ -24,4 +24,5 @@ class ReportListWidget(QWidget):
 
         # creating and adding editText
         self.list = ReportList(self)
+        self.list.setStyleSheet(f"color: #ADB2BD;background-color: #42474f;padding: 30px")
         mainLayout.addWidget(self.list)
