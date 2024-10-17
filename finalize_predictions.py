@@ -80,6 +80,8 @@ from messages.msg import Critical_report
 from messages.msg import Injury_report
 from messages.msg import Timer_status
 from messages.msg import Vitals_report
+from messages.msg import ModelPredictionStatus
+from messages.msg import ModelPredictionStatuses
 
 # timer states
 TIMER_ENDED     = 0
@@ -148,6 +150,7 @@ model_weights.append(weight)
 rospy.init_node('vote_and_create', anonymous=True)
 
 final_report_publisher = rospy.Publisher('final_report', Casualty_prediction, queue_size=10)
+model_prediction_statuses_publisher = rospy.Publisher('model_prediction_statuses', ModelPredictionStatuses, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -164,19 +167,28 @@ def reset_weight_array():
 
 # loops until all needed predictions have been received
 def wait_for_predictions():
+    
+
     received_all_predictions = False
     timeout_tracker = 0
 
     # waiting until all predictions have been received or timeout occurs
     while not received_all_predictions:
+        model_prediction_statuses = ModelPredictionStatuses()
         if timeout_tracker == 0:
             system_print("Waiting for predictions...")
 
         # checking which models have published predictions
         received_all_predictions = True
-        for has_predicted in prediction_received:
+        for index, has_predicted in enumerate(prediction_received):
+            model_prediction_status = ModelPredictionStatus()
+            model_prediction_status.model_number = index
+            model_prediction_status.made_prediction = has_predicted
+            model_prediction_statuses.modelPredictionStatuses.append(model_prediction_status)
             if not has_predicted:
                 received_all_predictions = False
+
+        model_prediction_statuses_publisher.publish(model_prediction_statuses)
 
         # checking for timeout
         if timeout_tracker == int(PREDICTION_TIMEOUT/0.2):
