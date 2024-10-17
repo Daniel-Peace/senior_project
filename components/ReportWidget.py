@@ -3,7 +3,9 @@ from PyQt5.QtCore       import Qt
 from components         import TitleLabel, BodyLabel
 from casualty           import Casualty
 
+# this class creates a card that displays all values of a report on a casualty
 class ReportWidget(QWidget):
+    # constructor
     def __init__(
             self, 
             title, 
@@ -129,7 +131,7 @@ class ReportWidget(QWidget):
         self.alertnessVerbal.updateText("Alertness Verbal: " + str(casualty.alertness_verbal))
         self.alertnessMotor.updateText("Alertness Motor: " + str(casualty.alertness_motor))
 
-    # converts teh QListWidgetItem to a Casualty item and updates the report card
+    # converts the QListWidgetItem to a Casualty item and updates the report card
     def updateOnClick(self, item:QListWidgetItem):
         report = item.data(Qt.UserRole)
         self.updateReportValues(report)
@@ -138,8 +140,3 @@ class ReportWidget(QWidget):
     def updateBackgroundColor(self, color):
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet(f"background-color: {color};"'border-radius: 5px;')
-    
-    # updates the color of all text in the card
-    def updateTextColor(self, color):
-        self.titleLabel.updateColor(color)
-        self.bodyLabel.updateColor(color)
