@@ -4,12 +4,15 @@ import cv2
 import numpy as np
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Assigned_apriltag, Casualty_prediction
+from messages.msg       import Timer_status, Current_timer, Casualty_prediction
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
 from components         import MainWindow
 from casualty           import Casualty
+
+# global variables
+reportNumber = 0
 
 # creates signals for updating UI
 class Communicator(QObject):
@@ -31,6 +34,7 @@ class Communicator(QObject):
     updateTextColorPredictionTimer      = pyqtSignal(str)
     updateCurrentTagDetections          = pyqtSignal(str)
     updateCurrentPredictions            = pyqtSignal(Casualty)
+    updateReportList                    = pyqtSignal(str, Casualty)
 
 
 # -------------------------------------------------------
@@ -157,6 +161,7 @@ def handle_current_tag_detections(msg):
     communicator.updateCurrentTagDetections.emit(detectionList)
 
 def handle_finalized_reports(msg:Casualty_prediction):
+    global reportNumber
     casualty = Casualty()
     casualty.apriltag               = msg.apriltag
     casualty.is_coherent            = msg.is_coherent
@@ -173,15 +178,20 @@ def handle_finalized_reports(msg:Casualty_prediction):
     casualty.alertness_verbal       = msg.alertness_verbal
     casualty.alertness_motor        = msg.alertness_motor
     communicator.updateCurrentPredictions.emit(casualty)
+    reportTitle = "Report " + str(reportNumber)
+    reportNumber += 1
+    communicator.updateReportList.emit(reportTitle, casualty)
     
-
 # "main function"
 if __name__ == "__main__":
+    # initializing gui as ROS node
+    rospy.init_node('gui_main', anonymous=True)
+
     # creating main app
     app = QApplication(sys.argv)
 
     # creating main window
-    window = MainWindow()
+    window = MainWindow()  
 
     # creating communicator object facilitates the use of signals
     communicator = Communicator()
@@ -190,15 +200,6 @@ if __name__ == "__main__":
     # CONNECT SIGNALS HERE
     # -------------------------------------------------------
     communicator.updateImageSignal.connect(window.videoView.update_image)
-
-    # showing main window
-    window.show()
-
-    # initializing gui as ROS node
-    rospy.init_node('gui_main', anonymous=True)
-
-    # creating communicator object facilitates the use of signals
-    communicator = Communicator()
     communicator.updateImageSignal.connect(window.videoView.update_image)
     communicator.updateAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBody)
     communicator.updateBackgroundAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBackgroundColor)
@@ -214,6 +215,8 @@ if __name__ == "__main__":
     communicator.updateTextColorPredictionTimer.connect(window.predictionTimerCard.updateTextColor)
     communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBody)
     communicator.updateCurrentPredictions.connect(window.predictions.updateReportValues)
+    communicator.updateReportList.connect(window.reportList.list.addItemToList)
+    window.reportList.list.itemClicked.connect(window.predictions.updateOnClick)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
@@ -226,6 +229,9 @@ if __name__ == "__main__":
     rospy.Subscriber('current_timer', Current_timer, handle_current_timer)
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
     rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
+
+    # showing main window
+    window.show()
 
     # pausing to allow ROS callback function and the UI to sync
     timer = QTimer()
