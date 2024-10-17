@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
-from components         import VideoView, CardWidget, LogWidget, PredictionWidget
+from components         import VideoView, CardWidget, LogWidget, ReportWidget, ReportListWidget
 
+# This class creates the main window of the application
 class MainWindow(QMainWindow):
     def __init__(self):
         # initializing parent object
@@ -27,12 +28,10 @@ class MainWindow(QMainWindow):
 
         # creating main right vertical layout
         self.rightVboxLayout = QVBoxLayout()
-        # =======================================================
 
         # -------------------------------------------------------
         # ADD COMPONENTS TO LEFT LAYOUT HERE
         # -------------------------------------------------------
-
         # creating and adding timer ui
         self.timerHboxLayout = QHBoxLayout()
         self.aprilTagCountdownCard = CardWidget('AprilTag\nCountdown', '--')
@@ -58,15 +57,19 @@ class MainWindow(QMainWindow):
 
         # adding bottom infoHboxLayout to leftVboxLayout
         self.leftVboxLayout.addLayout(self.infoHboxLayout)
-
-        # -------------------------------------------------------
-        # ADD COMPONENTS TO LEFT LAYOUT HERE
         # -------------------------------------------------------
 
+        # -------------------------------------------------------
+        # ADD COMPONENTS TO RIGHT LAYOUT HERE
+        # -------------------------------------------------------
         self.rightHbox = QHBoxLayout()
 
+        # adding list of reports
+        self.reportList = ReportListWidget()
+        self.rightHbox.addWidget(self.reportList)
+
         # adding final prediction widget
-        self.predictions = PredictionWidget(title="Final Predictions")
+        self.predictions = ReportWidget(title="Final Predictions")
         self.rightHbox.addWidget(self.predictions)
 
         # adding log widget
@@ -74,10 +77,7 @@ class MainWindow(QMainWindow):
         self.rightHbox.addWidget(self.log)
 
         self.rightVboxLayout.addLayout(self.rightHbox)
-
-
-
-        # =======================================================
+        # -------------------------------------------------------
 
         # adding main vertical layouts to main layout
         mainLayout.addLayout(self.leftVboxLayout)
