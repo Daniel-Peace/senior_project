@@ -1,6 +1,7 @@
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget, QGraphicsPixmapItem
-from PyQt5.QtGui import QPixmap, QImage
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets    import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget, QGraphicsPixmapItem
+from PyQt5.QtGui        import QPixmap, QImage
+from PyQt5.QtCore       import Qt
+from screeninfo         import get_monitors
 
 class VideoView(QWidget):
     def __init__(self, parent=None):
@@ -13,22 +14,12 @@ class VideoView(QWidget):
         self.view.setFrameShape(QGraphicsView.NoFrame)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
-        # Layout
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.view)
-        layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
-        self.setLayout(layout)
 
         # Initialize placeholder items
         self.pixmap_item = QGraphicsPixmapItem()
         self.scene.addItem(self.pixmap_item)
 
-    def update_image(self, numpy_array):
-        """Update the displayed image with a new NumPy array."""
-        self.image_width = numpy_array.shape[1]
-        self.image_height = numpy_array.shape[0]
-        
+    def update_image(self, numpy_array):        
         height, width, channels = numpy_array.shape
         bytes_per_line = channels * width
 
@@ -44,8 +35,13 @@ class VideoView(QWidget):
         qimage = QImage(numpy_array.data, width, height, bytes_per_line, format_map[channels])
 
         # Update QGraphicsView
-        self.pixmap_item.setPixmap(QPixmap.fromImage(qimage))
+        pixmap = QPixmap.fromImage(qimage)
+        # pixmap = pixmap.scaled(monitors[0].width/2, monitors[0].width/2, Qt.KeepAspectRatio)
+        self.pixmap_item.setPixmap(pixmap)
         
+        width = pixmap.width()
+        height = pixmap.height()
+
         # Set the scene rect to the size of the image
         self.scene.setSceneRect(0, 0, width, height)
         
