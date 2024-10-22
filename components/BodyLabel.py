@@ -10,7 +10,7 @@ class BodyLabel(QLabel):
         # setting default properties
         self.setAlignment(Qt.AlignCenter)
         self.setStyleSheet(f"color: #ADB2BD;")
-        self.setFont(QFont("Arial", 14))
+        self.setFont(QFont("Arial", 20))
 
     def updateText(self, text):
         self.setText(text)

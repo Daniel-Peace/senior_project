@@ -153,11 +153,11 @@ def handle_current_tag_detections(msg):
             # checking if this is the first iteration
             if first_iteration:
                 first_iteration = False
-                detectionList += ("id: " + str(detections.id[0]))
+                detectionList += ("Tag ID: " + str(detections.id[0]))
             else:
-                detectionList += ("\nid: " + str(detections.id[0]))
+                detectionList += ("\nTag ID: " + str(detections.id[0]))
     else:
-        detectionList += "id: --"
+        detectionList += "Tag ID: --"
 
     communicator.updateCurrentTagDetections.emit(detectionList)
 

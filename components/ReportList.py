@@ -10,7 +10,7 @@ class ReportList(QListWidget):
         
         # setting default properties
         self.setStyleSheet(f"color: #ADB2BD;")
-        self.setFont(QFont("Arial", 14))
+        self.setFont(QFont("Arial", 20))
 
     # adds a report to the list by adding the report name to the list and attaching the casualty data
     def addItemToList(self, name:str, casualty:Casualty):

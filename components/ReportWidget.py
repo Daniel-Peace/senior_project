@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets    import QWidget, QVBoxLayout, QListWidgetItem
+from PyQt5.QtWidgets    import QWidget, QVBoxLayout, QListWidgetItem, QSizePolicy
 from PyQt5.QtCore       import Qt
 from components         import TitleLabel, BodyLabel
 from casualty           import Casualty
@@ -27,88 +27,100 @@ class ReportWidget(QWidget):
             ):
         super().__init__(parent)
 
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+
         # creating and setting main layout for card
         mainLayout = QVBoxLayout()
         self.setLayout(mainLayout)
 
         # setting style of card
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet('background-color: #2F343E;''border-radius: 5px;')
-        self.setMinimumWidth(250)
+        self.setStyleSheet('background-color: #2F343E;''border-radius: 15px;')
         
         # creating and adding title label
         self.titleLabel = TitleLabel(title)
         mainLayout.addWidget(self.titleLabel)
+        self.titleLabel.setMaximumHeight(60)
+        self.titleLabel.setMinimumHeight(60)
+
+        self.valueWidget = QWidget()
+        self.valueWidget.setStyleSheet(f"color: #ADB2BD;background-color: #42474f;padding: 10px;border-radius: 15px;")
+        self.valueLayout = QVBoxLayout()
+        self.valueWidget.setLayout(self.valueLayout)
+        
 
         # creating and adding apriltag label
         self.apriltag = BodyLabel(apriltag)
-        mainLayout.addWidget(self.apriltag)
+        self.valueLayout.addWidget(self.apriltag)
         self.apriltag.setAlignment(Qt.AlignLeft)
 
         # creating and adding isCoherent label
         self.isCoherent = BodyLabel(isCoherent)
-        mainLayout.addWidget(self.isCoherent)
+        self.valueLayout.addWidget(self.isCoherent)
         self.isCoherent.setAlignment(Qt.AlignLeft)
 
         # creating and adding timeAgo label
         self.timeAgo = BodyLabel(timeAgo)
-        mainLayout.addWidget(self.timeAgo)
+        self.valueLayout.addWidget(self.timeAgo)
         self.timeAgo.setAlignment(Qt.AlignLeft)
 
         # creating and adding severeHemorrhage label
         self.severeHemorrhage = BodyLabel(severeHemorrhage)
-        mainLayout.addWidget(self.severeHemorrhage)
+        self.valueLayout.addWidget(self.severeHemorrhage)
         self.severeHemorrhage.setAlignment(Qt.AlignLeft)
 
         # creating and adding respiratoryDistress label
         self.respiratoryDistress = BodyLabel(respiratoryDistress)
-        mainLayout.addWidget(self.respiratoryDistress)
+        self.valueLayout.addWidget(self.respiratoryDistress)
         self.respiratoryDistress.setAlignment(Qt.AlignLeft)
 
         # creating and adding heartRate label
         self.heartRate = BodyLabel(heartRate)
-        mainLayout.addWidget(self.heartRate)
+        self.valueLayout.addWidget(self.heartRate)
         self.heartRate.setAlignment(Qt.AlignLeft)
 
         # creating and adding respiratoryRate label
         self.respiratoryRate = BodyLabel(respiratoryRate)
-        mainLayout.addWidget(self.respiratoryRate)
+        self.valueLayout.addWidget(self.respiratoryRate)
         self.respiratoryRate.setAlignment(Qt.AlignLeft)
 
         # creating and adding traumaTorso label
         self.traumaTorso = BodyLabel(traumaTorso)
-        mainLayout.addWidget(self.traumaTorso)
+        self.valueLayout.addWidget(self.traumaTorso)
         self.traumaTorso.setAlignment(Qt.AlignLeft)
 
         # creating and adding traumaHead label
         self.traumaHead = BodyLabel(traumaHead)
-        mainLayout.addWidget(self.traumaHead)
+        self.valueLayout.addWidget(self.traumaHead)
         self.traumaHead.setAlignment(Qt.AlignLeft)
 
         # creating and adding traumaLowerExt label
         self.traumaLowerExt = BodyLabel(traumaLowerExt)
-        mainLayout.addWidget(self.traumaLowerExt)
+        self.valueLayout.addWidget(self.traumaLowerExt)
         self.traumaLowerExt.setAlignment(Qt.AlignLeft)
 
         # creating and adding traumaUpperExt label
         self.traumaUpperExt = BodyLabel(traumaUpperExt)
-        mainLayout.addWidget(self.traumaUpperExt)
+        self.valueLayout.addWidget(self.traumaUpperExt)
         self.traumaUpperExt.setAlignment(Qt.AlignLeft)
 
         # creating and adding alertnessOcular label
         self.alertnessOcular = BodyLabel(alertnessOcular)
-        mainLayout.addWidget(self.alertnessOcular)
+        self.valueLayout.addWidget(self.alertnessOcular)
         self.alertnessOcular.setAlignment(Qt.AlignLeft)
 
         # creating and adding alertnessVerbal label
         self.alertnessVerbal = BodyLabel(alertnessVerbal)
-        mainLayout.addWidget(self.alertnessVerbal)
+        self.valueLayout.addWidget(self.alertnessVerbal)
         self.alertnessVerbal.setAlignment(Qt.AlignLeft)
 
         # creating and adding alertnessMotor label
         self.alertnessMotor = BodyLabel(alertnessMotor)
-        mainLayout.addWidget(self.alertnessMotor)
+        self.valueLayout.addWidget(self.alertnessMotor)
         self.alertnessMotor.setAlignment(Qt.AlignLeft)
+
+        mainLayout.addWidget(self.valueWidget)
 
     # updates the title label
     def updateTitle(self, title):
@@ -139,4 +151,4 @@ class ReportWidget(QWidget):
     # updates the background color of the card
     def updateBackgroundColor(self, color):
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet(f"background-color: {color};"'border-radius: 5px;')
+        self.setStyleSheet(f"background-color: {color};"'border-radius: 15px;')

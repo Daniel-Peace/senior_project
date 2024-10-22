@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets    import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget, QGraphicsPixmapItem
 from PyQt5.QtGui        import QPixmap, QImage
 from PyQt5.QtCore       import Qt
-from screeninfo         import get_monitors
 
 class VideoView(QWidget):
     def __init__(self, parent=None):

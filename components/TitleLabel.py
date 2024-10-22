@@ -10,7 +10,7 @@ class TitleLabel(QLabel):
         # setting default properties
         self.setAlignment(Qt.AlignCenter)
         self.setStyleSheet(f"color: #ADB2BD;")
-        self.setFont(QFont("Arial", 14, QFont.Bold))
+        self.setFont(QFont("Arial", 20, QFont.Bold))
 
     def updateText(self, text):
         self.setText(text)

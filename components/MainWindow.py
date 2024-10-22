@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
-from components         import VideoView, CardWidget, LogWidget, ReportWidget, ReportListWidget
+from PyQt5.QtGui        import QFont
+from components         import VideoView, CardWidget, ReportWidget, ReportListWidget, ApriltagDetectionsWidget
 
 # This class creates the main window of the application
 class MainWindow(QMainWindow):
@@ -23,6 +24,9 @@ class MainWindow(QMainWindow):
         # creating main layout
         mainLayout = QHBoxLayout(centralWidget)
 
+        # setting spacing between cards
+        mainLayout.setSpacing(10)
+
         # creating main left vertical layout
         self.leftVboxLayout = QVBoxLayout()
 
@@ -34,13 +38,17 @@ class MainWindow(QMainWindow):
         # -------------------------------------------------------
         # creating and adding timer ui
         self.timerHboxLayout = QHBoxLayout()
-        self.aprilTagCountdownCard = CardWidget('AprilTag\nCountdown', '--')
+        self.aprilTagCountdownCard = CardWidget('AprilTag Countdown', '--')
+        self.aprilTagCountdownCard.bodyLabel.setFont(QFont("Arial", 75))
         self.timerHboxLayout.addWidget(self.aprilTagCountdownCard)
-        self.aprilTagTimerCard = CardWidget('AprilTag\nTimer', '--')
+        self.aprilTagTimerCard = CardWidget('AprilTag Timer', '--')
+        self.aprilTagTimerCard.bodyLabel.setFont(QFont("Arial", 75))
         self.timerHboxLayout.addWidget(self.aprilTagTimerCard)
-        self.predictionCountdownCard = CardWidget('Prediction\nCountdown', '--')
+        self.predictionCountdownCard = CardWidget('Prediction Countdown', '--')
+        self.predictionCountdownCard.bodyLabel.setFont(QFont("Arial", 75))
         self.timerHboxLayout.addWidget(self.predictionCountdownCard)
-        self.predictionTimerCard = CardWidget('Prediction\nTimer', '--')
+        self.predictionTimerCard = CardWidget('Prediction Timer', '--')
+        self.predictionTimerCard.bodyLabel.setFont(QFont("Arial", 75))
         self.timerHboxLayout.addWidget(self.predictionTimerCard)
         self.leftVboxLayout.addLayout(self.timerHboxLayout)
 
@@ -51,13 +59,15 @@ class MainWindow(QMainWindow):
         # creating bottom hbox to hold other info cards
         self.infoHboxLayout = QHBoxLayout()
 
-        # creating and adding current AprilTag detections card
-        self.currentDetections = CardWidget('Current Apriltag\nDetections', 'id: --')
+        # creating AprilTag detection widget
+        self.currentDetections = ApriltagDetectionsWidget()
         self.infoHboxLayout.addWidget(self.currentDetections)
 
         # creating and adding current AprilTag detections card
         self.modelPredictionStatuses = CardWidget('Model Prediction Status:', '--')
+        # self.modelPredictionStatuses.bodyLabel.setAlignment(Qt.AlignLeft)
         self.infoHboxLayout.addWidget(self.modelPredictionStatuses)
+
 
         # adding bottom infoHboxLayout to leftVboxLayout
         self.leftVboxLayout.addLayout(self.infoHboxLayout)
@@ -73,12 +83,8 @@ class MainWindow(QMainWindow):
         self.rightHbox.addWidget(self.reportList)
 
         # adding final prediction widget
-        self.predictions = ReportWidget(title="Final Predictions")
+        self.predictions = ReportWidget(title="Selected Report")
         self.rightHbox.addWidget(self.predictions)
-
-        # adding log widget
-        self.log = LogWidget()
-        self.rightHbox.addWidget(self.log)
 
         self.rightVboxLayout.addLayout(self.rightHbox)
         # -------------------------------------------------------

@@ -12,11 +12,13 @@ class CardWidget(QWidget):
 
         # setting style of card
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet('background-color: #2F343E;''border-radius: 5px;')
+        self.setStyleSheet('background-color: #2F343E;''border-radius: 15px;')
         
         # creating and adding title label
         self.titleLabel = TitleLabel(title)
         mainLayout.addWidget(self.titleLabel)
+        self.titleLabel.setMaximumHeight(60)
+        self.titleLabel.setMinimumHeight(60)
 
         # creating and adding title label
         self.bodyLabel = BodyLabel(body)
@@ -33,7 +35,7 @@ class CardWidget(QWidget):
     # updates the background color of the card
     def updateBackgroundColor(self, color):
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet(f"background-color: {color};"'border-radius: 5px;')
+        self.setStyleSheet(f"background-color: {color};"'border-radius: 15px;')
     
     # updates the color of all text in the card
     def updateTextColor(self, color):
