@@ -6,6 +6,7 @@ from components         import TitleLabel, ReportList
 class ReportListWidget(QWidget):
     # constructor
     def __init__(self):
+        # instantiate parent object
         super().__init__()
 
         # creating and setting main layout for card
@@ -20,7 +21,6 @@ class ReportListWidget(QWidget):
         self.title = TitleLabel("Reports")
         self.title.setMaximumHeight(60)
         self.title.setMinimumHeight(60)
-        # self.setMinimumWidth(300)
         mainLayout.addWidget(self.title)
 
         # creating and adding editText
