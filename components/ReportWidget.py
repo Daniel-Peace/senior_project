@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets    import QWidget, QVBoxLayout, QListWidgetItem, QSizePolicy
-from PyQt5.QtCore       import Qt
-from components         import TitleLabel, BodyLabel
 from casualty           import Casualty
+from components         import BodyLabel, TitleLabel
+from PyQt5.QtCore       import Qt
+from PyQt5.QtWidgets    import QListWidgetItem, QSizePolicy, QWidget, QVBoxLayout
 
 # this class creates a card that displays all values of a report on a casualty
 class ReportWidget(QWidget):
@@ -25,30 +25,32 @@ class ReportWidget(QWidget):
             alertnessMotor='Alertness Motor: --',
             parent = None
             ):
+        
+        # instantiate parent object
         super().__init__(parent)
-
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
 
         # creating and setting main layout for card
         mainLayout = QVBoxLayout()
         self.setLayout(mainLayout)
 
         # setting style of card
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet('background-color: #2F343E;''border-radius: 15px;')
         
         # creating and adding title label
         self.titleLabel = TitleLabel(title)
-        mainLayout.addWidget(self.titleLabel)
         self.titleLabel.setMaximumHeight(60)
         self.titleLabel.setMinimumHeight(60)
-
+        mainLayout.addWidget(self.titleLabel)
+    
+        # creating sub-widget to contain body labels for report values
         self.valueWidget = QWidget()
         self.valueWidget.setStyleSheet(f"color: #ADB2BD;background-color: #42474f;padding: 10px;border-radius: 15px;")
+        
+        # creating and setting main layout for sub-widget
         self.valueLayout = QVBoxLayout()
         self.valueWidget.setLayout(self.valueLayout)
-        
 
         # creating and adding apriltag label
         self.apriltag = BodyLabel(apriltag)
@@ -120,10 +122,11 @@ class ReportWidget(QWidget):
         self.valueLayout.addWidget(self.alertnessMotor)
         self.alertnessMotor.setAlignment(Qt.AlignLeft)
 
+        # adding sub-widget to main widget
         mainLayout.addWidget(self.valueWidget)
 
     # updates the title label
-    def updateTitle(self, title):
+    def updateTitleText(self, title):
         self.titleLabel.updateText(title)
 
     # updates the values in the report card
