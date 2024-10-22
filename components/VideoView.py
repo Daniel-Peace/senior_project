@@ -1,6 +1,8 @@
-from PyQt5.QtWidgets    import QGraphicsView, QGraphicsScene, QVBoxLayout, QWidget, QGraphicsPixmapItem
-from PyQt5.QtGui        import QPixmap, QImage
 from PyQt5.QtCore       import Qt
+from PyQt5.QtGui        import QImage, QPixmap
+from PyQt5.QtWidgets    import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QWidget
+
+
 
 class VideoView(QWidget):
     # constructor
