@@ -1,6 +1,5 @@
 from .TitleLabel                import TitleLabel
 from .BodyLabel                 import BodyLabel
-from .ApriltagDetectionsWidget  import ApriltagDetectionsWidget
 from .ReportList                import ReportList
 from .ReportListWidget          import ReportListWidget
 from .VideoView                 import VideoView

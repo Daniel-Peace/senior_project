@@ -221,7 +221,7 @@ if __name__ == "__main__":
     communicator.updatePredictionTimer.connect(window.predictionTimerCard.updateBodyText)
     communicator.updateBackgroundPredictionTimer.connect(window.predictionTimerCard.updateBodyBackgroundColor)
     communicator.updateTextColorPredictionTimer.connect(window.predictionTimerCard.updateBodyTextColor)
-    communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBody)
+    communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBodyText)
     communicator.updateCurrentPredictions.connect(window.predictions.updateReportValues)
     communicator.updateReportList.connect(window.reportList.list.addItemToList)
     window.reportList.list.itemClicked.connect(window.predictions.updateOnClick)

@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets    import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
+from components         import CardWidget, ReportListWidget, ReportWidget, VideoView
 from PyQt5.QtGui        import QFont
-from components         import VideoView, CardWidget, ReportWidget, ReportListWidget, ApriltagDetectionsWidget
+from PyQt5.QtWidgets    import QHBoxLayout, QMainWindow, QWidget, QVBoxLayout
 
 # This class creates the main window of the application
 class MainWindow(QMainWindow):
@@ -11,11 +11,7 @@ class MainWindow(QMainWindow):
         # setting window defaults
         self.setWindowTitle('ROS Monitor')
         self.setGeometry(100, 100, 800, 600)
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #282C32;  /* Light gray background */
-            }
-        """)
+        self.setStyleSheet('background-color: #282C32;')
 
         # creating and setting central widget
         centralWidget = QWidget(self)
@@ -23,15 +19,16 @@ class MainWindow(QMainWindow):
 
         # creating main layout
         mainLayout = QHBoxLayout(centralWidget)
-
-        # setting spacing between cards
         mainLayout.setSpacing(10)
+        centralWidget.setLayout(mainLayout)
 
         # creating main left vertical layout
-        self.leftVboxLayout = QVBoxLayout()
+        self.mainLeftVboxLayout = QVBoxLayout()
 
         # creating main right vertical layout
-        self.rightVboxLayout = QVBoxLayout()
+        self.mainRightVboxLayout = QVBoxLayout()
+
+
 
         # -------------------------------------------------------
         # ADD COMPONENTS TO LEFT LAYOUT HERE
@@ -50,48 +47,51 @@ class MainWindow(QMainWindow):
         self.predictionTimerCard = CardWidget('Prediction Timer', '--')
         self.predictionTimerCard.bodyLabel.setFont(QFont("Arial", 75))
         self.timerHboxLayout.addWidget(self.predictionTimerCard)
-        self.leftVboxLayout.addLayout(self.timerHboxLayout)
+        self.mainLeftVboxLayout.addLayout(self.timerHboxLayout)
 
         # creating and adding the VideoWidget
         self.videoView = VideoView(self)
-        self.leftVboxLayout.addWidget(self.videoView)
+        self.mainLeftVboxLayout.addWidget(self.videoView)
 
-        # creating bottom hbox to hold other info cards
+        # creating info hbox
         self.infoHboxLayout = QHBoxLayout()
 
-        # creating AprilTag detection widget
-        self.currentDetections = ApriltagDetectionsWidget()
+        # creating and adding card widget to hold current AprilTag detections
+        self.currentDetections = CardWidget('Current AprilTag Detections', 'Tag ID: --')
         self.infoHboxLayout.addWidget(self.currentDetections)
 
-        # creating and adding current AprilTag detections card
+        # creating and adding card widget to hold the prediction status of each model
         self.modelPredictionStatuses = CardWidget('Model Prediction Status:', '--')
-        # self.modelPredictionStatuses.bodyLabel.setAlignment(Qt.AlignLeft)
         self.infoHboxLayout.addWidget(self.modelPredictionStatuses)
 
-
         # adding bottom infoHboxLayout to leftVboxLayout
-        self.leftVboxLayout.addLayout(self.infoHboxLayout)
+        self.mainLeftVboxLayout.addLayout(self.infoHboxLayout)
         # -------------------------------------------------------
+
+
 
         # -------------------------------------------------------
         # ADD COMPONENTS TO RIGHT LAYOUT HERE
         # -------------------------------------------------------
-        self.rightHbox = QHBoxLayout()
+        # creating hbox to hold report widgets
+        self.reportHbox = QHBoxLayout()
 
         # adding list of reports
         self.reportList = ReportListWidget()
-        self.rightHbox.addWidget(self.reportList)
+        self.reportHbox.addWidget(self.reportList)
 
         # adding final prediction widget
         self.predictions = ReportWidget(title="Selected Report")
-        self.rightHbox.addWidget(self.predictions)
+        self.reportHbox.addWidget(self.predictions)
 
-        self.rightVboxLayout.addLayout(self.rightHbox)
+        self.mainRightVboxLayout.addLayout(self.reportHbox)
         # -------------------------------------------------------
 
+
+
         # adding main vertical layouts to main layout
-        mainLayout.addLayout(self.leftVboxLayout)
-        mainLayout.addLayout(self.rightVboxLayout)
+        mainLayout.addLayout(self.mainLeftVboxLayout)
+        mainLayout.addLayout(self.mainRightVboxLayout)
 
         
 
