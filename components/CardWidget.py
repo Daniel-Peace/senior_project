@@ -54,4 +54,4 @@ class CardWidget(QWidget):
     
     # updates the color of all text in the card
     def updateBodyTextColor(self, color):
-        self.bodyLabel.updateColor(color)
+        self.bodyLabel.updateTextColor(color)
