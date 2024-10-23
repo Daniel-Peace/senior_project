@@ -2,6 +2,7 @@ import sys
 import rospy
 import cv2
 import numpy as np
+from apriltag_ros.msg   import AprilTagDetectionArray
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
 from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses, Assigned_apriltag
@@ -13,13 +14,16 @@ from casualty           import Casualty
 
 # global variables
 reportNumber = 0
+x = 0
+y = 0
+z = 0
 
 # creates signals for updating UI
 class Communicator(QObject):
     # -------------------------------------------------------
     # ADD NEW SIGNALS HERE
     # -------------------------------------------------------
-    updateImageSignal                   = pyqtSignal(np.ndarray)
+    updateImageSignal                   = pyqtSignal(np.ndarray, float, float, float)
     updateAprilTagCountdown             = pyqtSignal(str)
     updateAprilTagTimer                 = pyqtSignal(str)
     updatePredictionCountdown           = pyqtSignal(str)
@@ -37,6 +41,7 @@ class Communicator(QObject):
     updateReportList                    = pyqtSignal(str, Casualty)
     updateModelReportStatuses           = pyqtSignal(str)
     updateCurrentlyPickedApriltag       = pyqtSignal(str)
+    updateAprilTagBoxes                 = pyqtSignal(int, int)
 
 
 # -------------------------------------------------------
@@ -61,7 +66,7 @@ def handle_incoming_images(msg):
         return
     
     # sending image to videoView in window
-    communicator.updateImageSignal.emit(correctedCvImage)
+    communicator.updateImageSignal.emit(correctedCvImage, x, y, z)
 
 def handle_apriltag_countdown(msg):
     timer_status    = msg.timer_status
@@ -145,11 +150,21 @@ def handle_current_timer(msg):
         communicator.updateBackgroundAprilTagCountdown.emit("#42474f")
         communicator.updateTextColorAprilTagCountdown.emit("#ADB2BD")
 
-def handle_current_tag_detections(msg):
+def handle_current_tag_detections(msg:AprilTagDetectionArray):
+    global x
+    global y
+    global z
+    x = 0
+    y = 0
+    z = 0
     detectionList = ""
 
     # checking if a detection was made
     if len(msg.detections)  != 0:
+
+        x = msg.detections[0].pose.pose.pose.position.x
+        y = msg.detections[0].pose.pose.pose.position.y
+        z = msg.detections[0].pose.pose.pose.position.z
         first_iteration = True
 
         # looping over detections

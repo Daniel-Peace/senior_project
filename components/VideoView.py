@@ -1,6 +1,11 @@
 from PyQt5.QtCore       import Qt
-from PyQt5.QtGui        import QImage, QPixmap
+from PyQt5.QtGui        import QImage, QPixmap, QPainter, QPen
 from PyQt5.QtWidgets    import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QWidget
+
+FX = 1008.307177038531
+FY = 1005.865107977325
+CX = 643.2913125401469
+CY = 401.0211161336514
 
 # this class creates a video feed for a ros usb camera node
 class VideoView(QWidget):
@@ -24,7 +29,7 @@ class VideoView(QWidget):
         self.scene.addItem(self.pixmap_item)
 
     # this function updates the iamge with each new frame received from the ROS usb camera node
-    def update_image(self, numpy_array): 
+    def update_image(self, numpy_array, x, y, z): 
         # getting data about image from numpy array       
         height, width, channels = numpy_array.shape
         bytes_per_line = channels * width
@@ -43,10 +48,42 @@ class VideoView(QWidget):
         qimage = QImage(numpy_array.data, width, height, bytes_per_line, format_map[channels])
 
         # creating a QPixmap from the QImage and updating image
-        pixmap = QPixmap.fromImage(qimage)
-        self.pixmap_item.setPixmap(pixmap)
-        width = pixmap.width()
-        height = pixmap.height()
+        self.pixmap = QPixmap.fromImage(qimage)
+
+        # Check for division by zero
+        if z == 0:
+            print("z can't be zero")
+        
+        else:
+            # drawing box around AprilTags
+            self.painter = QPainter(self.pixmap)
+            self.penRectangle = QPen(Qt.red)
+            self.penRectangle.setWidth(3)
+            self.painter.setPen(self.penRectangle)
+            
+            # Calculate pixel coordinates
+            u = (FX * x / z) + CX
+            v = (FY * y / z) + CY
+
+            print(u)
+            print(v)
+            print("--------------------------------------------------------------------------")
+
+            
+
+            u_int = int(round(u))
+            v_int = int(round(v))
+
+            boxWidth = int(round((FX * 0.216) / z))
+            boxHeight = int(round((FY * 0.279) / z))
+
+            self.painter.drawRect(u_int - boxWidth/2,v_int - boxHeight/2,boxWidth,boxHeight)
+            self.painter.end()
+
+
+        self.pixmap_item.setPixmap(self.pixmap)
+        width = self.pixmap.width()
+        height = self.pixmap.height()
 
         # setting view size based on image size
         self.scene.setSceneRect(0, 0, width, height)
