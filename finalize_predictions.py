@@ -80,6 +80,8 @@ from messages.msg import Critical_report
 from messages.msg import Injury_report
 from messages.msg import Timer_status
 from messages.msg import Vitals_report
+from messages.msg import ModelPredictionStatus
+from messages.msg import ModelPredictionStatuses
 
 # timer states
 TIMER_ENDED     = 0
@@ -116,7 +118,8 @@ apriltag = -1
 received_april = False
 
 # tracks the previous state of the timer
-previous_timer_status = -1
+previousPredictionTimerState    = -1
+previousApriltagTimerState      = -1
 
 # holds tracking values for if a model has published a submission yet
 prediction_received = []
@@ -148,6 +151,7 @@ model_weights.append(weight)
 rospy.init_node('vote_and_create', anonymous=True)
 
 final_report_publisher = rospy.Publisher('final_report', Casualty_prediction, queue_size=10)
+model_prediction_statuses_publisher = rospy.Publisher('model_prediction_statuses', ModelPredictionStatuses, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -169,14 +173,21 @@ def wait_for_predictions():
 
     # waiting until all predictions have been received or timeout occurs
     while not received_all_predictions:
+        model_prediction_statuses = ModelPredictionStatuses()
         if timeout_tracker == 0:
             system_print("Waiting for predictions...")
 
         # checking which models have published predictions
         received_all_predictions = True
-        for has_predicted in prediction_received:
+        for index, has_predicted in enumerate(prediction_received):
+            model_prediction_status = ModelPredictionStatus()
+            model_prediction_status.model_number = index
+            model_prediction_status.made_prediction = has_predicted
+            model_prediction_statuses.modelPredictionStatuses.append(model_prediction_status)
             if not has_predicted:
                 received_all_predictions = False
+
+        model_prediction_statuses_publisher.publish(model_prediction_statuses)
 
         # checking for timeout
         if timeout_tracker == int(PREDICTION_TIMEOUT/0.2):
@@ -431,46 +442,84 @@ def reset_casualty_objects():
     finalized_casualty.reset()
 
 # sets the AprilTag of the current casualty
-def set_apriltag():
+def setApriltag():
     system_print("Setting AprilTag")
     finalized_casualty.apriltag = apriltag
 
-# calls all reset functions
-def reset():
+# handles actions that need to take place when a timer starts
+def onPredictionTimerStart():
+    system_print("Timer has started")
     reset_casualty_objects()
-    reset_apriltag()
     reset_trackers()
+    reset_weight_array()
 
 # handles actions that need to take place when a timer finishes
-def on_timer_finish():
+def onPredictionTimerEnd():
     system_print("Timer has ended")
     wait_for_predictions()
-    wait_for_apriltag()
-    set_apriltag()
     finalize_afflication_values()
     publish_reports()
-
-# handles actions that need to take place when a timer starts
-def on_timer_start():
-    system_print("Timer has started")
-    reset()
+    reset_casualty_objects()
+    reset_trackers()
+    reset_weight_array()
 
 # handles actions that need to take place when a timer is cancelled
-def on_timer_cancel():
+def onPredictionTimerCancel():
     system_print("Timer has been cancelled")
-    reset()
+    reset_casualty_objects()
+    reset_trackers()
+    reset_weight_array()
 
 # handles actions corresponding to the timer starting and stopping
-def handle_timer_status(timer):
-    global previous_timer_status
-    if previous_timer_status != timer.timer_status:
-        previous_timer_status = timer.timer_status
-        if timer.timer_status == TIMER_STARTED:
-            on_timer_start()
-        elif timer.timer_status == TIMER_ENDED:
-            on_timer_finish()
+def handlePredictionTimerStatus(msg:Timer_status):
+    global previousPredictionTimerState
+
+    # checking if the timer status has changed
+    if previousPredictionTimerState != msg.timer_status:
+        # updating timer
+        previousPredictionTimerState = msg.timer_status
+
+        # checking timer state
+        if msg.timer_status == TIMER_STARTED:
+            onPredictionTimerStart()
+        elif msg.timer_status == TIMER_ENDED:
+            onPredictionTimerEnd()
         else:
-            on_timer_cancel()
+            onPredictionTimerCancel()
+
+# handles actions that take place when the apriltag timer starts
+def onApriltagTimerStart():
+    system_print("AprilTag timer has started")
+    reset_apriltag()
+
+# handles actions that take place when the apriltag timer ends
+def onApriltagTimerEnd():
+    system_print("AprilTag timer has ended")
+    wait_for_apriltag()
+    setApriltag()
+    reset_apriltag
+
+# handles actions that take place when the apriltag timer is canceled
+def onApriltagTimerCancel():
+    system_print("AprilTag timer has been cancelled")
+    reset_apriltag()
+
+# handles actions based on the state of the AprilTag timer
+def handle_apriltag_timer_status(msg:Timer_status):
+    global previousApriltagTimerState
+
+    # checking if the timer status has changed
+    if previousApriltagTimerState != msg.timer_status:
+        # updating timer
+        previousApriltagTimerState = msg.timer_status
+
+        # checking timer state
+        if msg.timer_status == TIMER_STARTED:
+            onApriltagTimerStart()
+        elif msg.timer_status == TIMER_ENDED:
+            onApriltagTimerEnd()
+        else:
+            onApriltagTimerCancel()
 
 # gets the assigned AprilTag and sets it
 def assign_apriltag(assigned_apriltag):
@@ -511,7 +560,8 @@ if __name__ == "__main__":
     print("---------------------------------------------------------------------")
     # registering callback functions
     system_print("Registering callback functions")
-    rospy.Subscriber('prediction_timer_status', Timer_status, handle_timer_status)
+    rospy.Subscriber('prediction_timer_status', Timer_status, handlePredictionTimerStatus)
+    rospy.Subscriber('apriltag_timer_status', Timer_status, handle_apriltag_timer_status)
     rospy.Subscriber('assigned_apriltag', Assigned_apriltag, assign_apriltag)
     rospy.Subscriber('model_predictions', Casualty_prediction, receive_model_predictions)
 

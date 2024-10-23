@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Casualty_prediction
+from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses, Assigned_apriltag
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
@@ -35,6 +35,8 @@ class Communicator(QObject):
     updateCurrentTagDetections          = pyqtSignal(str)
     updateCurrentPredictions            = pyqtSignal(Casualty)
     updateReportList                    = pyqtSignal(str, Casualty)
+    updateModelReportStatuses           = pyqtSignal(str)
+    updateCurrentlyPickedApriltag       = pyqtSignal(str)
 
 
 # -------------------------------------------------------
@@ -66,8 +68,11 @@ def handle_apriltag_countdown(msg):
     time_left       = msg.time_left
     if timer_status == 1:
         communicator.updateAprilTagCountdown.emit(str(time_left))
+        communicator.updateCurrentlyPickedApriltag.emit("Tag ID: --")
+        communicator.updateModelReportStatuses.emit('--')
     else:
         communicator.updateAprilTagCountdown.emit('--')
+        
 
 def handle_apriltag_timer(msg):
     timer_status    = msg.timer_status
@@ -102,9 +107,9 @@ def handle_current_timer(msg):
         communicator.updateTextColorAprilTagCountdown.emit("#282C32")
 
         # changing back to origial colors
-        communicator.updateBackgroundPredictionTimer.emit("#2F343E")
+        communicator.updateBackgroundPredictionTimer.emit("#42474f")
         communicator.updateTextColorPredictionTimer.emit("#ADB2BD")
-        communicator.updateBackgroundAprilTagTimer.emit("#2F343E")
+        communicator.updateBackgroundAprilTagTimer.emit("#42474f")
         communicator.updateTextColorAprilTagTimer.emit("#ADB2BD")
 
     elif current_timer == 1:
@@ -113,9 +118,9 @@ def handle_current_timer(msg):
         communicator.updateTextColorAprilTagTimer.emit("#282C32")
 
         # changing back to origial colors
-        communicator.updateBackgroundAprilTagCountdown.emit("#2F343E")
+        communicator.updateBackgroundAprilTagCountdown.emit("#42474f")
         communicator.updateTextColorAprilTagCountdown.emit("#ADB2BD")
-        communicator.updateBackgroundPredictionCountdown.emit("#2F343E")
+        communicator.updateBackgroundPredictionCountdown.emit("#42474f")
         communicator.updateTextColorPredictionCountdown.emit("#ADB2BD")
 
     elif current_timer == 2:
@@ -124,9 +129,9 @@ def handle_current_timer(msg):
         communicator.updateTextColorPredictionCountdown.emit("#282C32")
 
         # changing back to origial colors
-        communicator.updateBackgroundAprilTagTimer.emit("#2F343E")
+        communicator.updateBackgroundAprilTagTimer.emit("#42474f")
         communicator.updateTextColorAprilTagTimer.emit("#ADB2BD")
-        communicator.updateBackgroundPredictionTimer.emit("#2F343E")
+        communicator.updateBackgroundPredictionTimer.emit("#42474f")
         communicator.updateTextColorPredictionTimer.emit("#ADB2BD")
 
     else:
@@ -135,9 +140,9 @@ def handle_current_timer(msg):
         communicator.updateTextColorPredictionTimer.emit("#282C32")
 
         # changing back to origial colors
-        communicator.updateBackgroundPredictionCountdown.emit("#2F343E")
+        communicator.updateBackgroundPredictionCountdown.emit("#42474f")
         communicator.updateTextColorPredictionCountdown.emit("#ADB2BD")
-        communicator.updateBackgroundAprilTagCountdown.emit("#2F343E")
+        communicator.updateBackgroundAprilTagCountdown.emit("#42474f")
         communicator.updateTextColorAprilTagCountdown.emit("#ADB2BD")
 
 def handle_current_tag_detections(msg):
@@ -152,11 +157,11 @@ def handle_current_tag_detections(msg):
             # checking if this is the first iteration
             if first_iteration:
                 first_iteration = False
-                detectionList += ("id: " + str(detections.id[0]))
+                detectionList += ("Tag ID: " + str(detections.id[0]))
             else:
-                detectionList += ("\nid: " + str(detections.id[0]))
+                detectionList += ("\nTag ID: " + str(detections.id[0]))
     else:
-        detectionList += "id: --"
+        detectionList += "Tag ID: --"
 
     communicator.updateCurrentTagDetections.emit(detectionList)
 
@@ -181,6 +186,17 @@ def handle_finalized_reports(msg:Casualty_prediction):
     reportTitle = "Report " + str(reportNumber)
     reportNumber += 1
     communicator.updateReportList.emit(reportTitle, casualty)
+
+def handle_model_prediction_statuses(msg:ModelPredictionStatuses):
+    status_list = ""
+    for model_prediction_status in msg.modelPredictionStatuses:
+        status_list += "Model " + str(model_prediction_status.model_number) + ": " + str(model_prediction_status.made_prediction) + "\n"
+
+    communicator.updateModelReportStatuses.emit(status_list)
+
+def handle_assigned_apriltag(msg:Assigned_apriltag):
+    apriltagId = msg.apriltag
+    communicator.updateCurrentlyPickedApriltag.emit("Tag ID: " + str(apriltagId))
     
 # "main function"
 if __name__ == "__main__":
@@ -201,22 +217,24 @@ if __name__ == "__main__":
     # -------------------------------------------------------
     communicator.updateImageSignal.connect(window.videoView.update_image)
     communicator.updateImageSignal.connect(window.videoView.update_image)
-    communicator.updateAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBody)
-    communicator.updateBackgroundAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBackgroundColor)
-    communicator.updateTextColorAprilTagCountdown.connect(window.aprilTagCountdownCard.updateTextColor)
-    communicator.updateAprilTagTimer.connect(window.aprilTagTimerCard.updateBody)
-    communicator.updateBackgroundAprilTagTimer.connect(window.aprilTagTimerCard.updateBackgroundColor)
-    communicator.updateTextColorAprilTagTimer.connect(window.aprilTagTimerCard.updateTextColor)
-    communicator.updatePredictionCountdown.connect(window.predictionCountdownCard.updateBody)
-    communicator.updateBackgroundPredictionCountdown.connect(window.predictionCountdownCard.updateBackgroundColor)
-    communicator.updateTextColorPredictionCountdown.connect(window.predictionCountdownCard.updateTextColor)
-    communicator.updatePredictionTimer.connect(window.predictionTimerCard.updateBody)
-    communicator.updateBackgroundPredictionTimer.connect(window.predictionTimerCard.updateBackgroundColor)
-    communicator.updateTextColorPredictionTimer.connect(window.predictionTimerCard.updateTextColor)
-    communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBody)
+    communicator.updateAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyText)
+    communicator.updateBackgroundAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyBackgroundColor)
+    communicator.updateTextColorAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyTextColor)
+    communicator.updateAprilTagTimer.connect(window.aprilTagTimerCard.updateBodyText)
+    communicator.updateBackgroundAprilTagTimer.connect(window.aprilTagTimerCard.updateBodyBackgroundColor)
+    communicator.updateTextColorAprilTagTimer.connect(window.aprilTagTimerCard.updateBodyTextColor)
+    communicator.updatePredictionCountdown.connect(window.predictionCountdownCard.updateBodyText)
+    communicator.updateBackgroundPredictionCountdown.connect(window.predictionCountdownCard.updateBodyBackgroundColor)
+    communicator.updateTextColorPredictionCountdown.connect(window.predictionCountdownCard.updateBodyTextColor)
+    communicator.updatePredictionTimer.connect(window.predictionTimerCard.updateBodyText)
+    communicator.updateBackgroundPredictionTimer.connect(window.predictionTimerCard.updateBodyBackgroundColor)
+    communicator.updateTextColorPredictionTimer.connect(window.predictionTimerCard.updateBodyTextColor)
+    communicator.updateCurrentTagDetections.connect(window.currentDetections.updateBodyText)
     communicator.updateCurrentPredictions.connect(window.predictions.updateReportValues)
     communicator.updateReportList.connect(window.reportList.list.addItemToList)
     window.reportList.list.itemClicked.connect(window.predictions.updateOnClick)
+    communicator.updateModelReportStatuses.connect(window.modelPredictionStatuses.updateBodyText)
+    communicator.updateCurrentlyPickedApriltag.connect(window.currentlyPickedApriltag.updateBodyText)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
@@ -229,6 +247,8 @@ if __name__ == "__main__":
     rospy.Subscriber('current_timer', Current_timer, handle_current_timer)
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
     rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
+    rospy.Subscriber('model_prediction_statuses', ModelPredictionStatuses, handle_model_prediction_statuses)
+    rospy.Subscriber('assigned_apriltag', Assigned_apriltag, handle_assigned_apriltag)
 
     # showing main window
     window.show()
