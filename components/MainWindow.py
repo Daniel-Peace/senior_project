@@ -60,6 +60,10 @@ class MainWindow(QMainWindow):
         self.currentDetections = CardWidget('Current AprilTag Detections', 'Tag ID: --')
         self.infoHboxLayout.addWidget(self.currentDetections)
 
+        # creating and adding card widget to hold currently picked AprilTag
+        self.currentlyPickedApriltag = CardWidget('Currently Picked Apriltag', 'Tag ID: --')
+        self.infoHboxLayout.addWidget(self.currentlyPickedApriltag)
+
         # creating and adding card widget to hold the prediction status of each model
         self.modelPredictionStatuses = CardWidget('Model Prediction Status:', '--')
         self.infoHboxLayout.addWidget(self.modelPredictionStatuses)

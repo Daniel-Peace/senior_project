@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses
+from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses, Assigned_apriltag
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
@@ -36,6 +36,7 @@ class Communicator(QObject):
     updateCurrentPredictions            = pyqtSignal(Casualty)
     updateReportList                    = pyqtSignal(str, Casualty)
     updateModelReportStatuses           = pyqtSignal(str)
+    updateCurrentlyPickedApriltag       = pyqtSignal(str)
 
 
 # -------------------------------------------------------
@@ -67,8 +68,11 @@ def handle_apriltag_countdown(msg):
     time_left       = msg.time_left
     if timer_status == 1:
         communicator.updateAprilTagCountdown.emit(str(time_left))
+        communicator.updateCurrentlyPickedApriltag.emit("Tag ID: --")
+        communicator.updateModelReportStatuses.emit('--')
     else:
         communicator.updateAprilTagCountdown.emit('--')
+        
 
 def handle_apriltag_timer(msg):
     timer_status    = msg.timer_status
@@ -189,6 +193,10 @@ def handle_model_prediction_statuses(msg:ModelPredictionStatuses):
         status_list += "Model " + str(model_prediction_status.model_number) + ": " + str(model_prediction_status.made_prediction) + "\n"
 
     communicator.updateModelReportStatuses.emit(status_list)
+
+def handle_assigned_apriltag(msg:Assigned_apriltag):
+    apriltagId = msg.apriltag
+    communicator.updateCurrentlyPickedApriltag.emit("Tag ID: " + str(apriltagId))
     
 # "main function"
 if __name__ == "__main__":
@@ -226,6 +234,7 @@ if __name__ == "__main__":
     communicator.updateReportList.connect(window.reportList.list.addItemToList)
     window.reportList.list.itemClicked.connect(window.predictions.updateOnClick)
     communicator.updateModelReportStatuses.connect(window.modelPredictionStatuses.updateBodyText)
+    communicator.updateCurrentlyPickedApriltag.connect(window.currentlyPickedApriltag.updateBodyText)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
@@ -239,6 +248,7 @@ if __name__ == "__main__":
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
     rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
     rospy.Subscriber('model_prediction_statuses', ModelPredictionStatuses, handle_model_prediction_statuses)
+    rospy.Subscriber('assigned_apriltag', Assigned_apriltag, handle_assigned_apriltag)
 
     # showing main window
     window.show()

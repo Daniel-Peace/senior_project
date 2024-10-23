@@ -2,8 +2,7 @@ from PyQt5.QtCore       import Qt
 from PyQt5.QtGui        import QImage, QPixmap
 from PyQt5.QtWidgets    import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QWidget
 
-
-
+# this class creates a video feed for a ros usb camera node
 class VideoView(QWidget):
     # constructor
     def __init__(self, parent=None):
