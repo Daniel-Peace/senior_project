@@ -29,6 +29,7 @@ add_message_files(
   Current_timer.msg
   ModelPredictionStatus.msg
   ModelPredictionStatuses.msg
+  LoopState.msg
 )
 
 include_directories(
