@@ -24,6 +24,7 @@ import rospy
 from messages.msg import Timer_status
 from messages.msg import Command
 from messages.msg import Current_timer
+from messages.msg import LoopState
 
 # general constants
 RUN_DEBUG   = False
@@ -64,6 +65,7 @@ apriltag_timer_publisher        = rospy.Publisher('apriltag_timer_status', Timer
 prediction_countdown_publisher  = rospy.Publisher('prediction_countdown_status', Timer_status, queue_size=10)
 prediction_timer_publisher      = rospy.Publisher('prediction_timer_status', Timer_status, queue_size=10)
 current_timer_publisher         = rospy.Publisher('current_timer', Current_timer, queue_size=10)
+loop_status_publisher           = rospy.Publisher('loop_state', LoopState, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -103,6 +105,24 @@ def timer(timer_length)-> int:
     current_timer_tick = 0
     timer_status = Timer_status()
     timer_status.timer_status = TIMER_STARTED
+
+    if current_timer == APRILTAG_COUNTDOWN:
+        loopState = LoopState()
+        loopState.state = "Waiting to assign AprilTag"
+        loop_status_publisher.publish(loopState)
+    elif current_timer == APRILTAG_TIMER:
+        loopState = LoopState()
+        loopState.state = "Assigning AprilTag"
+        loop_status_publisher.publish(loopState)
+    elif current_timer == PREDICTION_COUNTDOWN:
+        loopState = LoopState()
+        loopState.state = "Waiting to scan for afflications"
+        loop_status_publisher.publish(loopState)
+    else:
+        loopState = LoopState()
+        loopState.state = "Scanning for afflications"
+        loop_status_publisher.publish(loopState)
+
     while True:
         # printing time left in
         if (((current_timer_tick * 0.2) % 1) == 0):
@@ -155,11 +175,30 @@ def manage_timers():
     current_timer_msg = Current_timer()
     current_timer_msg.current_timer = current_timer
     current_timer_publisher.publish(current_timer_msg)
+
+    loopState = LoopState()
+    loopState.state = "Waiting to assign AprilTag"
+    loop_status_publisher.publish(loopState)
     
     while True:
         # checking if ctrl-c was entered
         if rospy.is_shutdown():
             break
+
+        if current_timer == APRILTAG_COUNTDOWN:
+            pass
+        elif current_timer == APRILTAG_TIMER:
+            loopState = LoopState()
+            loopState.state = "Assigning AprilTag"
+            loop_status_publisher.publish(loopState)
+        elif current_timer == PREDICTION_COUNTDOWN:
+            loopState = LoopState()
+            loopState.state = "Waiting to scan for afflications"
+            loop_status_publisher.publish(loopState)
+        else:
+            loopState = LoopState()
+            loopState.state = "Scanning for afflications"
+            loop_status_publisher.publish(loopState)
         
         # checking if the button is not being pressed
         if (not button_pressed) and timer_ready:
