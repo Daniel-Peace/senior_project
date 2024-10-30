@@ -16,16 +16,13 @@ from casualty           import Casualty
 
 # global variables
 reportNumber = 0
-x = 0
-y = 0
-z = 0
 
 # creates signals for updating UI
 class Communicator(QObject):
     # -------------------------------------------------------
     # ADD NEW SIGNALS HERE
     # -------------------------------------------------------
-    updateImageSignal                   = pyqtSignal(np.ndarray, float, float, float)
+    updateImageSignal                   = pyqtSignal(np.ndarray)
     updateAprilTagCountdown             = pyqtSignal(str)
     updateAprilTagTimer                 = pyqtSignal(str)
     updatePredictionCountdown           = pyqtSignal(str)
@@ -43,7 +40,7 @@ class Communicator(QObject):
     updateReportList                    = pyqtSignal(str, Casualty)
     updateModelReportStatuses           = pyqtSignal(str)
     updateCurrentlyPickedApriltag       = pyqtSignal(str)
-    updateAprilTagBoxes                 = pyqtSignal(int, int)
+    updateAprilTagBoxes                 = pyqtSignal(AprilTagDetectionArray)
     updateLoopState                     = pyqtSignal(str)
 
 
@@ -69,7 +66,7 @@ def handle_incoming_images(msg):
         return
     
     # sending image to videoView in window
-    communicator.updateImageSignal.emit(correctedCvImage, x, y, z)
+    communicator.updateImageSignal.emit(correctedCvImage)
 
 def handle_apriltag_countdown(msg):
     timer_status    = msg.timer_status
@@ -154,20 +151,10 @@ def handle_current_timer(msg):
         communicator.updateTextColorAprilTagCountdown.emit("#ADB2BD")
 
 def handle_current_tag_detections(msg:AprilTagDetectionArray):
-    global x
-    global y
-    global z
-    x = 0
-    y = 0
-    z = 0
     detectionList = ""
 
     # checking if a detection was made
     if len(msg.detections)  != 0:
-
-        x = msg.detections[0].pose.pose.pose.position.x
-        y = msg.detections[0].pose.pose.pose.position.y
-        z = msg.detections[0].pose.pose.pose.position.z
         first_iteration = True
 
         # looping over detections
@@ -182,6 +169,7 @@ def handle_current_tag_detections(msg:AprilTagDetectionArray):
         detectionList += "Tag ID: --"
 
     communicator.updateCurrentTagDetections.emit(detectionList)
+    communicator.updateAprilTagBoxes.emit(msg)
 
 def handle_finalized_reports(msg:Casualty_prediction):
     global reportNumber
@@ -239,7 +227,6 @@ if __name__ == "__main__":
     # CONNECT SIGNALS HERE
     # -------------------------------------------------------
     communicator.updateImageSignal.connect(window.videoView.update_image)
-    communicator.updateImageSignal.connect(window.videoView.update_image)
     communicator.updateAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyText)
     communicator.updateBackgroundAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyBackgroundColor)
     communicator.updateTextColorAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyTextColor)
@@ -259,6 +246,7 @@ if __name__ == "__main__":
     communicator.updateModelReportStatuses.connect(window.modelPredictionStatuses.updateBodyText)
     communicator.updateCurrentlyPickedApriltag.connect(window.currentlyPickedApriltag.updateBodyText)
     communicator.updateLoopState.connect(window.loopState.updateBodyText)
+    communicator.updateAprilTagBoxes.connect(window.videoView.updateTagDetections)
 
     # -------------------------------------------------------
     # ADD ROS TOPICS HERE
