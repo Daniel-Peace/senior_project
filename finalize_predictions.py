@@ -82,6 +82,7 @@ from messages.msg import Timer_status
 from messages.msg import Vitals_report
 from messages.msg import ModelPredictionStatus
 from messages.msg import ModelPredictionStatuses
+from messages.msg import LoopState
 
 # timer states
 TIMER_ENDED     = 0
@@ -150,8 +151,9 @@ model_weights.append(weight)
 # initializing node
 rospy.init_node('vote_and_create', anonymous=True)
 
-final_report_publisher = rospy.Publisher('final_report', Casualty_prediction, queue_size=10)
+final_report_publisher              = rospy.Publisher('final_report', Casualty_prediction, queue_size=10)
 model_prediction_statuses_publisher = rospy.Publisher('model_prediction_statuses', ModelPredictionStatuses, queue_size=10)
+loop_status_publisher               = rospy.Publisher('loop_state', LoopState, queue_size=10)
 
 # used for printing system messages
 def system_print(s):
@@ -170,6 +172,10 @@ def reset_weight_array():
 def wait_for_predictions():
     received_all_predictions = False
     timeout_tracker = 0
+
+    loopState = LoopState()
+    loopState.state = "Waiting for predictions"
+    loop_status_publisher.publish(loopState)
 
     # waiting until all predictions have been received or timeout occurs
     while not received_all_predictions:
@@ -228,6 +234,15 @@ def publish_reports():
     final_report.alertness_verbal       = finalized_casualty.alertness_verbal
     final_report.alertness_motor        = finalized_casualty.alertness_motor
     final_report_publisher.publish(final_report)
+
+    loopState = LoopState()
+    loopState.state = "Publishing Reports"
+    loop_status_publisher.publish(loopState)
+    time.sleep(2)
+    
+    loopState = LoopState()
+    loopState.state = "Waiting to assign AprilTag"
+    loop_status_publisher.publish(loopState)
 
 # handles combining and finalizing reports
 def finalize_afflication_values():

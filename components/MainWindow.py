@@ -58,14 +58,17 @@ class MainWindow(QMainWindow):
 
         # creating and adding card widget to hold current AprilTag detections
         self.currentDetections = CardWidget('Current AprilTag Detections', 'Tag ID: --')
+        self.currentDetections.setMaximumHeight(300)
         self.infoHboxLayout.addWidget(self.currentDetections)
 
         # creating and adding card widget to hold currently picked AprilTag
         self.currentlyPickedApriltag = CardWidget('Currently Picked Apriltag', 'Tag ID: --')
+        self.currentlyPickedApriltag.setMaximumHeight(300)
         self.infoHboxLayout.addWidget(self.currentlyPickedApriltag)
 
         # creating and adding card widget to hold the prediction status of each model
         self.modelPredictionStatuses = CardWidget('Model Prediction Status:', '--')
+        self.modelPredictionStatuses.setMaximumHeight(300)
         self.infoHboxLayout.addWidget(self.modelPredictionStatuses)
 
         # adding bottom infoHboxLayout to leftVboxLayout
@@ -88,7 +91,13 @@ class MainWindow(QMainWindow):
         self.predictions = ReportWidget(title="Selected Report")
         self.reportHbox.addWidget(self.predictions)
 
+        # adding reportHbox to main right widget
         self.mainRightVboxLayout.addLayout(self.reportHbox)
+
+        # creating and adding loop status card
+        self.loopState = CardWidget('Loop State', 'Waiting to assign AprilTag')
+        self.loopState.setMinimumHeight(300)
+        self.mainRightVboxLayout.addWidget(self.loopState)
         # -------------------------------------------------------
 
 
