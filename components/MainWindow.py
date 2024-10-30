@@ -91,6 +91,7 @@ class MainWindow(QMainWindow):
         self.predictions = ReportWidget(title="Selected Report")
         self.reportHbox.addWidget(self.predictions)
 
+        # adding reportHbox to main right widget
         self.mainRightVboxLayout.addLayout(self.reportHbox)
 
         # creating and adding loop status card
