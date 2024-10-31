@@ -1,0 +1,12 @@
+{
+    "models" : [
+        {
+            "name" : "Computer Vision",
+            "weight": 1
+        },
+        {
+            "name" : "Auditory Model",
+            "weight" : 3
+        }
+    ]
+}

@@ -71,6 +71,7 @@
 # imports
 import time
 import rospy
+import json
 from casualty import Casualty
 
 # ROS messages
@@ -83,6 +84,14 @@ from messages.msg import Vitals_report
 from messages.msg import ModelPredictionStatus
 from messages.msg import ModelPredictionStatuses
 from messages.msg import LoopState
+
+class Model:
+    # constructor
+    def __init__(self, name="model", weight=0, casualty=Casualty(), has_predicted=False):
+        self.name = name
+        self.weight = weight
+        self.casualty = casualty
+        self.has_predicted = has_predicted
 
 # timer states
 TIMER_ENDED     = 0
@@ -112,6 +121,9 @@ MODEL_3_INDEX = 3
 MODEL_4_INDEX = 4
 MODEL_5_INDEX = 5
 
+# holds configuration data from model_configs.json
+data = None
+
 # stores the april tag for the current casualty
 apriltag = -1
 
@@ -122,31 +134,26 @@ received_april = False
 previousPredictionTimerState    = -1
 previousApriltagTimerState      = -1
 
-# holds tracking values for if a model has published a submission yet
-prediction_received = []
-for index in range(NUM_OF_MODELS):
-    prediction_received.append(False)
+# list of models
+model_array: Model = []
 
-# creating casualty objects for each model to hold predictions
-model_predictions = []
-for index in range(NUM_OF_MODELS):
-    model_predictions.append(Casualty())
+# opening json config file
+with open('model_configs.json', 'r') as file:
+    data = json.load(file)
+
+# loading models into array
+for model in data['models']:
+    model = Model(name=model['name'], weight=model['weight'], casualty=Casualty())
+    model_array.append(model)
+
+model_array[1].weight = 5
+
+for model in model_array:
+    print(model.name)
+    print(model.weight)
+
+# creating casualty object for final report
 finalized_casualty  = Casualty()
-
-# holds weights for voting
-model_weights = []
-weight = MODEL_0_WEIGHT
-model_weights.append(weight)
-weight = MODEL_1_WEIGHT
-model_weights.append(weight)
-weight = MODEL_2_WEIGHT
-model_weights.append(weight)
-weight = MODEL_3_WEIGHT
-model_weights.append(weight)
-weight = MODEL_4_WEIGHT
-model_weights.append(weight)
-weight = MODEL_5_WEIGHT
-model_weights.append(weight)
 
 # initializing node
 rospy.init_node('vote_and_create', anonymous=True)
@@ -160,13 +167,10 @@ def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
 
 # resets the weight array to the default weights
-def reset_weight_array():
-    model_weights[MODEL_0_INDEX] = MODEL_0_WEIGHT
-    model_weights[MODEL_1_INDEX] = MODEL_1_WEIGHT
-    model_weights[MODEL_2_INDEX] = MODEL_2_WEIGHT
-    model_weights[MODEL_3_INDEX] = MODEL_3_WEIGHT
-    model_weights[MODEL_4_INDEX] = MODEL_4_WEIGHT
-    model_weights[MODEL_5_INDEX] = MODEL_5_WEIGHT
+def reset_weights():
+    global data
+    for index, model in enumerate(model_array):
+        model.weight = data['models'][index]['weight']
 
 # loops until all needed predictions have been received
 def wait_for_predictions():
@@ -466,7 +470,7 @@ def onPredictionTimerStart():
     system_print("Timer has started")
     reset_casualty_objects()
     reset_trackers()
-    reset_weight_array()
+    reset_weights()
 
 # handles actions that need to take place when a timer finishes
 def onPredictionTimerEnd():
@@ -476,14 +480,14 @@ def onPredictionTimerEnd():
     publish_reports()
     reset_casualty_objects()
     reset_trackers()
-    reset_weight_array()
+    reset_weights()
 
 # handles actions that need to take place when a timer is cancelled
 def onPredictionTimerCancel():
     system_print("Timer has been cancelled")
     reset_casualty_objects()
     reset_trackers()
-    reset_weight_array()
+    reset_weights()
 
 # handles actions corresponding to the timer starting and stopping
 def handlePredictionTimerStatus(msg:Timer_status):
@@ -547,19 +551,19 @@ def assign_apriltag(assigned_apriltag):
 
 # callback function for when predictions are received from model 0
 def receive_model_predictions(casualty_ros):
-    model_predictions[casualty_ros.model].severe_hemorrhage      = casualty_ros.severe_hemorrhage
-    model_predictions[casualty_ros.model].respiratory_distress   = casualty_ros.respiratory_distress
-    model_predictions[casualty_ros.model].heart_rate             = casualty_ros.heart_rate
-    model_predictions[casualty_ros.model].respiratory_rate       = casualty_ros.respiratory_rate
-    model_predictions[casualty_ros.model].trauma_head            = casualty_ros.trauma_head
-    model_predictions[casualty_ros.model].trauma_torso           = casualty_ros.trauma_torso
-    model_predictions[casualty_ros.model].trauma_lower_ext       = casualty_ros.trauma_lower_ext
-    model_predictions[casualty_ros.model].trauma_upper_ext       = casualty_ros.trauma_upper_ext
-    model_predictions[casualty_ros.model].alertness_ocular       = casualty_ros.alertness_ocular
-    model_predictions[casualty_ros.model].alertness_verbal       = casualty_ros.alertness_verbal
-    model_predictions[casualty_ros.model].alertness_motor        = casualty_ros.alertness_motor
-    model_predictions[casualty_ros.model].is_coherent            = casualty_ros.is_coherent
-    prediction_received[casualty_ros.model] = True
+    model_array[casualty_ros.model].casualty.severe_hemorrhage      = casualty_ros.severe_hemorrhage
+    model_array[casualty_ros.model].casualty.respiratory_distress   = casualty_ros.respiratory_distress
+    model_array[casualty_ros.model].casualty.heart_rate             = casualty_ros.heart_rate
+    model_array[casualty_ros.model].casualty.respiratory_rate       = casualty_ros.respiratory_rate
+    model_array[casualty_ros.model].casualty.trauma_head            = casualty_ros.trauma_head
+    model_array[casualty_ros.model].casualty.trauma_torso           = casualty_ros.trauma_torso
+    model_array[casualty_ros.model].casualty.trauma_lower_ext       = casualty_ros.trauma_lower_ext
+    model_array[casualty_ros.model].casualty.trauma_upper_ext       = casualty_ros.trauma_upper_ext
+    model_array[casualty_ros.model].casualty.alertness_ocular       = casualty_ros.alertness_ocular
+    model_array[casualty_ros.model].casualty.alertness_verbal       = casualty_ros.alertness_verbal
+    model_array[casualty_ros.model].casualty.alertness_motor        = casualty_ros.alertness_motor
+    model_array[casualty_ros.model].casualty.is_coherent            = casualty_ros.is_coherent
+    model_array[casualty_ros.model].has_predicted                   = True
 
     system_print("Received prediction from model " + str(casualty_ros.model))
     print("------------------------------------------------------")
@@ -567,7 +571,7 @@ def receive_model_predictions(casualty_ros):
     print("------------------------------------------------------")
     system_print("Updated casualty object for model " + str(casualty_ros.model))
     print("------------------------------------------------------")
-    model_predictions[casualty_ros.model].print_self()
+    model_array[casualty_ros.model].casualty.print_self()
     print("------------------------------------------------------")
 
 
