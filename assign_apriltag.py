@@ -2,15 +2,10 @@
 # Daniel Peace
 # CSUCI / Coordinated Robotics - DTC
 # -------------------------------------------------------------------------------------------
-# This program keeps track of the closest AprilTag to the camera when a scan is initiated.
-# It receives AprilTag data from the "tag_detections" topic and begins updating the current
-# AprilTag when it receives a timer_status message of true from the "apriltag_timer_status"
-# topic. Once it receives a timer_status mesage of false from the "apriltag_timer_status"
-# topic, it stops updating the current apriltag even if this program receives further
-# AprilTag detections. Upon receiving a timer_status message of True form the
-# "prediction_timer_status", it publishes the current AprilTag to the "assigned_apriltag"
-# topic. When the prediction timer ends, all tracking values are reset to be ready for the
-# next scan.
+# This program tracks which AprilTag is clostest to camera and publishes the tag once
+# the apriltag timer has started. Once the timer has ended it stops publishing the Apriltag
+# and resets the program for the next apriltag scan. If the timer is canceled, it will also
+# reset the program. 
 # -------------------------------------------------------------------------------------------
 
 # imports
@@ -46,13 +41,17 @@ def system_print(s):
 # resets program for next scan
 def reset():
     system_print("Resetting global variables for next scan")
+
+    # bringing global variables into local scope
     global current_apriltag
     global current_distance
     global apriltag_timer_started
+
     current_apriltag        = -1
     current_distance        = 999
     apriltag_timer_started  = False
 
+# this function publishes the currently picked apriltag
 def publishApriltag():
     system_print("Publishing Apriltag")
     assignedApriltag = Assigned_apriltag()
@@ -81,7 +80,9 @@ def updateCurrentApriltag(msg:AprilTagDetectionArray):
 
 # handles actions that take place when the apriltag timer starts
 def onApriltagTimerStart():
+    # bringing global variable into local scope
     global apriltag_timer_started
+
     system_print("AprilTag timer has started")
     reset()
     apriltag_timer_started = True
@@ -89,7 +90,9 @@ def onApriltagTimerStart():
 
 # handles actions that take place when the apriltag timer ends
 def onApriltagTimerEnd():
+    # bringing global variable into local scope
     global apriltag_timer_started
+
     system_print("AprilTag timer has ended")
     apriltag_timer_started = False
     system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
@@ -97,7 +100,9 @@ def onApriltagTimerEnd():
 
 # handles actions that take place when the apriltag timer is canceled
 def onApriltagTimerCancel():
+    # bringing global variable into local scope
     global apriltag_timer_started
+
     system_print("AprilTag timer has been cancelled")
     apriltag_timer_started = False
     system_print("Timer cancelled")
@@ -105,6 +110,7 @@ def onApriltagTimerCancel():
 
 # handles actions that take place on timer start and stop
 def handleApriltagTimerStatus(timer):
+    # bringing global variable into local scope
     global previous_timer_status
 
     # checking if the timer status has changed

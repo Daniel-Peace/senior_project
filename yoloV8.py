@@ -1,11 +1,13 @@
-# -------------------------------------------------------------------------------------------
+#!/usr/bin/env python3
+# ---------------------------------------------------------------------------------------------
 # Daniel Peace
 # CSUCI / Coordinated Robotics - DTC
-# -------------------------------------------------------------------------------------------
-# This program implements Ultralytics' yoloV8. It provides the options of
-# running the model using a path provided by the user or by using images published
-# to the "picked_image" topic. The results of the model prediction are stored in a ROS
-# message of type "Prediction.msg" and published to the "model_predictions" topic.
+# ---------------------------------------------------------------------------------------------
+# This program implements Ultralytics' yoloV8 to make predictions about possible afflications 
+# someone may have. It provides the options of running the model using a path provided by the 
+# user or by using images published to the "picked_image" topic. The results of the model 
+# prediction are stored in a ROS message of type "Prediction.msg" and published to the 
+# "model_predictions" topic.
 #
 # This model only predicts certain types of afflictions. Fields in the ROS message that the
 # model does not make predictions about are set to -1. When the model can make predictions
@@ -13,17 +15,29 @@
 # specific affliction and the field in the ROS message is set to zero to indicate this.
 #
 # The model pulls the weights from a folder in the src directory named yoloV8_weights.
-# You can change the weights being used by changing WEIGHTS constant to a path of your chosing.
-# The confidence value threshold for what predictions are published can be set with the
-# constant CONFIDENCE_THRESHOLD.
+# You can change the weights being used by changing the WEIGHTS constant to a path of 
+# your chosing.
 #
-# There is a DEBUG constant at the top of the program now. IF this is set to true, you
-# will have the choice to run the program with either a path or with the camera. If
-# it is set to false the program will run with the camera by default.
-# -------------------------------------------------------------------------------------------
+# The confidence value threshold for what predictions are published can be set with the
+# constant CONFIDENCE_THRESHOLD. Any predictions that have a confidence value below this 
+# threshold will be ignored.
+#
+# You may choose if you would like to pass in a path to an image or have the program pull 
+# images from the "picked_image" topic by using the DEBUG flag. If this is set to true, you
+# will have the choice to run the program with either a path to an image or using iamges 
+# published to the "picked_image" topic. If DEBUG is set to false the program will run with 
+# the camera by default.
+#
+# Afflication types that can be predicted:
+# - trauma_head
+# - trauma_torso
+# - trauma_lower_ext
+# - amputation_lower_ext
+# - trauma_upper_ext
+# - amputation_upper_ext
+# - severe_hemorrhage
+# ---------------------------------------------------------------------------------------------
 
-# imports
-import json
 import time
 import rospy
 import numpy as np
@@ -31,16 +45,20 @@ from PIL                import Image as PImage
 from sensor_msgs.msg    import Image
 from ultralytics        import YOLO
 from cv_bridge          import CvBridge
-
-# ROS messages
 from messages.msg       import Casualty_prediction
 from ultralytics.utils  import WEIGHTS_DIR
 
-# general constants
+
+# ================================== CHANGE THESE IF NEEDED ===================================
+
 DEBUG                   = True
+WEIGHTS                 = './yoloV8_weights/iteration_4.pt'
+
+# =============================================================================================
+
+# general constants
 RUN_WITH_CAMERA         = 0
 RUN_WITH_PATH           = 1
-WEIGHTS                 = './yoloV8_weights/iteration_4.pt'
 CONFIDENCE_THRESHOLD    = 0
 MODEL_NUMBER            = 0
 
@@ -67,7 +85,7 @@ def system_print(s):
     print("\u001b[34m[-] \u001b[0m" + s)
 
 # publishes the results of a prediction to "model_predictions"
-def publish_results(results):
+def publish_results(predictions):
     # declaring and initializing ROS message
     casualty_prediction = Casualty_prediction()
     casualty_prediction.severe_hemorrhage      = 0
@@ -85,8 +103,8 @@ def publish_results(results):
     casualty_prediction.model                  = MODEL_NUMBER
 
     # looping over results form prediction and updating ROS message
-    for result in results:
-        for cls, conf in zip(result.boxes.cls.cpu().numpy(), result.boxes.conf.cpu().numpy()):
+    for prediction in predictions:
+        for cls, conf in zip(prediction.boxes.cls.cpu().numpy(), prediction.boxes.conf.cpu().numpy()):
             # checking if the prediction has a confidence value above the set threshold
             if conf < CONFIDENCE_THRESHOLD:
                 continue
@@ -118,7 +136,7 @@ def publish_results(results):
     print("---------------------------------------------------------------------")
     print(casualty_prediction)
 
-    # Publishing ROS message
+    # publishing ROS message
     publisher.publish(casualty_prediction)
 
 # runs yoloV8 on an image published to the "usb_cam/image_raw"
@@ -179,7 +197,7 @@ def run_model_with_path():
         # running model on image
         results = model.predict(source=image)
 
-        # printing results of prediction as json for reference
+        # printing results of prediction for reference
         for result in results:
             print("\n+-------+---------------+")
             print("| class\t| Confidence\t|")
@@ -188,7 +206,7 @@ def run_model_with_path():
                 print("| " + str(int(cls)) + "\t| " + str(conf) + "\t|")
                 print("+-------+---------------+")
 
-        # publishing results to ros topic
+        # publishing results to ROS topic
         publish_results(results)
 
 # sets up the model based on the users mode choice

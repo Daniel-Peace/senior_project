@@ -16,9 +16,9 @@ from sensor_msgs.msg    import Image
 from messages.msg       import Timer_status
 
 # timer states
-TIMER_ENDED  = 0
-TIMER_STARTED    = 1
-TIMER_CANCELLED  = 2
+TIMER_ENDED     = 0
+TIMER_STARTED   = 1
+TIMER_CANCELLED = 2
 
 # global variables
 previous_timer_status = -1
@@ -48,9 +48,15 @@ def publish_image():
 
 # handles actions corresponding to the timer starting and stopping
 def handle_timer_status(msg):
+    # bringing global variable into local scope
     global previous_timer_status
+
+    # check if timer status has changed
     if previous_timer_status != msg.timer_status:
+        # updating timer status
         previous_timer_status = msg.timer_status
+
+        # check what the timer state is
         if msg.timer_status == TIMER_STARTED:
             system_print("Prediction timer started")
             publish_image()

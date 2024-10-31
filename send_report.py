@@ -13,25 +13,20 @@
 #   - status
 # -------------------------------------------------------------------------------------------
 
-# imports
 import json
-from logging import BASIC_FORMAT
-from numpy.lib.npyio import BagObj
 import requests
 import rospy
 import time
-
-# ROS messages
-from messages.msg import Critical_report
-from messages.msg import Critical_report_response
-from messages.msg import Injury_report
-from messages.msg import Injury_report_response
-from messages.msg import Status
-from messages.msg import Vitals_report
-from messages.msg import Vitals_report_response
+from messages.msg       import Critical_report
+from messages.msg       import Critical_report_response
+from messages.msg       import Injury_report
+from messages.msg       import Injury_report_response
+from messages.msg       import Status
+from messages.msg       import Vitals_report
+from messages.msg       import Vitals_report_response
 
 # general constants
-BAR         = "---------------------------------------------------------------------"
+BAR = "---------------------------------------------------------------------"
 
 # network constants
 TEST_HOST   = 'http://0.0.0.0:80'
