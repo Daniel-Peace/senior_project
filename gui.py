@@ -196,7 +196,7 @@ def handle_finalized_reports(msg:Casualty_prediction):
 def handle_model_prediction_statuses(msg:ModelPredictionStatuses):
     status_list = ""
     for model_prediction_status in msg.modelPredictionStatuses:
-        status_list += "Model " + str(model_prediction_status.model_number) + ": " + str(model_prediction_status.made_prediction) + "\n"
+        status_list += str(model_prediction_status.model_name) + ": " + str(model_prediction_status.made_prediction) + "\n"
 
     communicator.updateModelReportStatuses.emit(status_list)
 

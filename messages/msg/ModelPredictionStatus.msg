@@ -1,2 +1,2 @@
-int32 model_number
+string model_name
 bool made_prediction

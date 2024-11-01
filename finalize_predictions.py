@@ -42,87 +42,92 @@
 # array in the case of adding more models. (This may be improved in the future)
 # -------------------------------------------------------------------------------------------
 
-#   +------------------------------+    +------------------------------+
-#   | Models and their numbers     |    | Affliction types and values  |
-#   +----------------------+-------+    +----------------------+-------+
-#   | YoloV8               |   0   |    | SEVERE_HEMORRHAGE    |   0   |
-#   +----------------------+-------+    +----------------------+-------+
-#   | Auditory             |   1   |    | RESPIRATORY_DISTRESS |   1   |
-#   +----------------------+-------+    +----------------------+-------+
-#   | Radar                |   2   |    | HEART_RATE           |   2   |
-#   +----------------------+-------+    +----------------------+-------+
-#   | Face Mesh/Joints     |   3   |    | RESPIRATORY_RATE     |   3   |
-#   +----------------------+-------+    +----------------------+-------+
-#   | Depth Camera         |   4   |    | TRAUMA_HEAD          |   4   |
-#   +----------------------+-------+    +----------------------+-------+
-#   |                      |   5   |    | TRAUMA_TORSO         |   5   |
-#   +----------------------+-------+    +----------------------+-------+
-#   |                      |   6   |    | TRAUMA_LOWER_EXT     |   6   |
-#   +----------------------+-------+    +----------------------+-------+
-#                                       | TRAUMA_UPPER_EXT     |   7   |
-#                                       +----------------------+-------+
-#                                       | ALERTNESS_OCULAR     |   8   |
-#                                       +----------------------+-------+
-#                                       | ALERTNESS_VERBAL     |   9   |
-#                                       +----------------------+-------+
-#                                       | ALERTNESS_MOTOR      |   10  |
-#                                       +----------------------+-------+
+#   +------------------------------+
+#   | Affliction types and values  |
+#   +----------------------+-------+
+#   | SEVERE_HEMORRHAGE    |   0   |
+#   +----------------------+-------+
+#   | RESPIRATORY_DISTRESS |   1   |
+#   +----------------------+-------+
+#   | HEART_RATE           |   2   |
+#   +----------------------+-------+
+#   | RESPIRATORY_RATE     |   3   |
+#   +----------------------+-------+
+#   | TRAUMA_HEAD          |   4   |
+#   +----------------------+-------+
+#   | TRAUMA_TORSO         |   5   |
+#   +----------------------+-------+
+#   | TRAUMA_LOWER_EXT     |   6   |
+#   +----------------------+-------+
+#   | TRAUMA_UPPER_EXT     |   7   |
+#   +----------------------+-------+
+#   | ALERTNESS_OCULAR     |   8   |
+#   +----------------------+-------+
+#   | ALERTNESS_VERBAL     |   9   |
+#   +----------------------+-------+
+#   | ALERTNESS_MOTOR      |   10  |
+#   +----------------------+-------+
 
 # imports
 import time
 import rospy
 import json
-from casualty import Casualty
-
-# ROS messages
-from messages.msg import Assigned_apriltag
-from messages.msg import Casualty_prediction
-from messages.msg import Critical_report
-from messages.msg import Injury_report
-from messages.msg import Timer_status
-from messages.msg import Vitals_report
-from messages.msg import ModelPredictionStatus
-from messages.msg import ModelPredictionStatuses
-from messages.msg import LoopState
-
-class Model:
-    # constructor
-    def __init__(self, name="model", weight=0, casualty=Casualty(), has_predicted=False):
-        self.name = name
-        self.weight = weight
-        self.casualty = casualty
-        self.has_predicted = has_predicted
+from casualty       import Casualty
+from messages.msg   import Assigned_apriltag
+from messages.msg   import Casualty_prediction
+from messages.msg   import Critical_report
+from messages.msg   import Injury_report
+from messages.msg   import Timer_status
+from messages.msg   import Vitals_report
+from messages.msg   import ModelPredictionStatus
+from messages.msg   import ModelPredictionStatuses
+from messages.msg   import LoopState
 
 # timer states
-TIMER_ENDED     = 0
-TIMER_STARTED   = 1
-TIMER_CANCELLED  = 2
+TIMER_ENDED         = 0
+TIMER_STARTED       = 1
+TIMER_CANCELLED     = 2
 
 # general constants
-NUM_OF_MODELS       = 6
 DEFAULT_HR          = 100
 DEFAULT_RR          = 25
 PREDICTION_TIMEOUT  = 2
 APRILTAG_TIMEOUT    = 2
 
-# model weights
-MODEL_0_WEIGHT = 1
-MODEL_1_WEIGHT = 3
-MODEL_2_WEIGHT = 1
-MODEL_3_WEIGHT = 1
-MODEL_4_WEIGHT = 1
-MODEL_5_WEIGHT = 1
+# this class holds relavent information about an AI or ML model
+class Model:
+    # constructor
+    def __init__(self, name="model", weight=0, casualty=Casualty(), has_predicted=False, coherent_dependent=False, determines_coherent=False):
+        self.name                   = name
+        self.weight                 = weight
+        self.casualty               = casualty
+        self.has_predicted          = has_predicted
+        self.coherent_dependent     = coherent_dependent
+        self.determines_coherent    = determines_coherent
 
-# model indexes
-MODEL_0_INDEX = 0
-MODEL_1_INDEX = 1
-MODEL_2_INDEX = 2
-MODEL_3_INDEX = 3
-MODEL_4_INDEX = 4
-MODEL_5_INDEX = 5
+    # resets model
+    def reset(self):
+        self.has_predicted = False
+        self.casualty.reset()
+
+    # prints model
+    def print_self(self):
+        print("+---------------------+--------------------+")
+        print("| %-20s|%-20s|" % ("name", self.name))
+        print("+---------------------+--------------------+")
+        print("| %-20s|%-20s|" % ("weight", self.weight))
+        print("+---------------------+--------------------+")
+        print("| %-20s|%-20s|" % ("has predicted", self.has_predicted))
+        print("+---------------------+--------------------+")
+        print("| %-20s|%-20s|" % ("coherent dependent", self.coherent_dependent))
+        print("+---------------------+--------------------+")
+        print(f"|{'casualty':^42}|")
+        print("+------------------------------------------+")
+        self.casualty.print_self()
+        print("+------------------------------------------+\n")
 
 # holds configuration data from model_configs.json
-data = None
+model_configs = None
 
 # stores the april tag for the current casualty
 apriltag = -1
@@ -130,7 +135,7 @@ apriltag = -1
 # tracks if an april tag has been assigned to the current casualty
 received_april = False
 
-# tracks the previous state of the timer
+# tracks the previous state of the timers
 previousPredictionTimerState    = -1
 previousApriltagTimerState      = -1
 
@@ -139,18 +144,23 @@ model_array: Model = []
 
 # opening json config file
 with open('model_configs.json', 'r') as file:
-    data = json.load(file)
+    model_configs = json.load(file)
 
-# loading models into array
-for model in data['models']:
-    model = Model(name=model['name'], weight=model['weight'], casualty=Casualty())
+# loading model info into array
+for model in model_configs['models']:
+    model = Model(name=model['name'], weight=model['weight'], casualty=Casualty(),determines_coherent=model['determines_coherent'])
     model_array.append(model)
 
-model_array[1].weight = 5
+# used for printing system messages
+def system_print(s):
+    print("\u001b[34m[-] \u001b[0m" + s)
 
+# printing current models' info
+print("------------------------------------------------------")
+system_print("Loaded the following models:")
+print("------------------------------------------------------\n")
 for model in model_array:
-    print(model.name)
-    print(model.weight)
+    model.print_self()
 
 # creating casualty object for final report
 finalized_casualty  = Casualty()
@@ -162,15 +172,11 @@ final_report_publisher              = rospy.Publisher('final_report', Casualty_p
 model_prediction_statuses_publisher = rospy.Publisher('model_prediction_statuses', ModelPredictionStatuses, queue_size=10)
 loop_status_publisher               = rospy.Publisher('loop_state', LoopState, queue_size=10)
 
-# used for printing system messages
-def system_print(s):
-    print("\u001b[34m[-] \u001b[0m" + s)
-
 # resets the weight array to the default weights
 def reset_weights():
-    global data
+    global model_configs
     for index, model in enumerate(model_array):
-        model.weight = data['models'][index]['weight']
+        model.weight = model_configs['models'][index]['weight']
 
 # loops until all needed predictions have been received
 def wait_for_predictions():
@@ -189,12 +195,12 @@ def wait_for_predictions():
 
         # checking which models have published predictions
         received_all_predictions = True
-        for index, has_predicted in enumerate(prediction_received):
+        for model in model_array:
             model_prediction_status = ModelPredictionStatus()
-            model_prediction_status.model_number = index
-            model_prediction_status.made_prediction = has_predicted
+            model_prediction_status.model_name = model.name
+            model_prediction_status.made_prediction = model.has_predicted
             model_prediction_statuses.modelPredictionStatuses.append(model_prediction_status)
-            if not has_predicted:
+            if not model.has_predicted:
                 received_all_predictions = False
 
         model_prediction_statuses_publisher.publish(model_prediction_statuses)
@@ -212,8 +218,12 @@ def wait_for_predictions():
         system_print("Received all needed predictions")
     system_print("Models' prediction status:")
     print("------------------------------------------------------")
-    for index, has_predicted in enumerate(prediction_received, 0):
-        print("model " + str(index) + " has predicted:\t" + str(has_predicted))
+    print("+---------------------+---------------------+")
+    print("| %-20s| %-20s|" % ("name", 'status'))
+    print("+---------------------+---------------------+")
+    for model in model_array:
+        print("| %-20s| %-20s|" % (model.name, str(model.has_predicted)))
+        print("+---------------------+---------------------+")
     print("------------------------------------------------------")
 
 
@@ -252,30 +262,41 @@ def publish_reports():
 def finalize_afflication_values():
     system_print("Finalizing predictions")
 
-    # getting time_ago value
-    if model_predictions[MODEL_2_INDEX].time_ago >= 0:
-        finalized_casualty.time_ago = model_predictions[MODEL_2_INDEX].time_ago
-    elif model_predictions[MODEL_4_INDEX].time_ago >= 0:
-        finalized_casualty.time_ago = model_predictions[MODEL_2_INDEX].time_ago
-    else:
-        finalized_casualty.time_ago = 0
+    # setting time_ago value
+    finalized_casualty.time_ago = 20
 
     # checking if current casualty is coherent
-    system_print("Checking if casualty is coherent...")
-    if not model_predictions[MODEL_1_INDEX].is_coherent:
+    is_coherent_vote = 0
+    is_coherent = True
+    for model in model_array:
+        if model.determines_coherent:
+            if model.casualty.is_coherent:
+                is_coherent_vote += model.weight
+            else:
+                is_coherent_vote -= model.weight
+    if is_coherent_vote < 0:
+        is_coherent == False
         system_print("Casualty is incoherent")
-        model_weights[MODEL_1_INDEX] = 0
     else:
         system_print("Casualty is coherent")
 
     # adding up votes for severe_hemorrhage
     system_print("Finalizing severe hemorrhage prediction")
     affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.severe_hemorrhage == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.severe_hemorrhage == 1:
-            affliction_vote += model_weights[index]
+
+    # looping over models
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        if model.casualty.severe_hemorrhage == 0:
+            affliction_vote -= model.weight
+        elif model.casualty.severe_hemorrhage == 1:
+            affliction_vote += model.weight
 
     # checking final vote count
     if affliction_vote > 0:
@@ -286,11 +307,20 @@ def finalize_afflication_values():
     # adding up votes for respiratory_distress
     system_print("Finalizing respiratory distress prediction")
     affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.respiratory_distress == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.respiratory_distress == 1:
-            affliction_vote += model_weights[index]
+
+    # looping over models
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        if model.casualty.respiratory_distress == 0:
+            affliction_vote -= model.weight
+        elif model.casualty.respiratory_distress == 1:
+            affliction_vote += model.weight
 
     # checking final vote count
     if affliction_vote > 0:
@@ -300,42 +330,51 @@ def finalize_afflication_values():
 
     # averaging heart rate values
     system_print("Finalizing heart rate prediction")
-    average_hr          = 0
-    num_of_predictions  = 0
+    hr_weighted_sum     = 0
+    weight_sum          = 0
     has_changed         = False
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.heart_rate >= 0:
-            average_hr += model_prediction.heart_rate
-            num_of_predictions += 1
-            has_changed = True
+    for model in model_array:
+        if model.casualty.heart_rate >= 0:
+            hr_weighted_sum += model.casualty.heart_rate * model.weight
+            weight_sum      += model.weight
+            has_changed     = True
     if has_changed:
-        finalized_casualty.heart_rate = int(average_hr / num_of_predictions - 0.5 + 1)
+        finalized_casualty.heart_rate = int(hr_weighted_sum / weight_sum + 0.5)
     else:
         finalized_casualty.heart_rate = DEFAULT_HR
 
     # averaging respiratory rate values
     system_print("Finalizing respiratory rate prediction")
-    average_rr          = 0
-    num_of_predictions  = 0
+    rr_weighted_sum     = 0
+    weight_sum          = 0
     has_changed         = False
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.respiratory_rate >= 0:
-            average_rr += model_prediction.respiratory_rate
-            num_of_predictions += 1
-            has_changed = True
+    for model in model_array:
+        if model.casualty.respiratory_rate >= 0:
+            rr_weighted_sum += model.casualty.respiratory_rate
+            weight_sum      += model.weight
+            has_changed     = True
     if has_changed:
-        finalized_casualty.respiratory_rate = int(average_rr / num_of_predictions - 0.5 + 1)
+        finalized_casualty.respiratory_rate = int(rr_weighted_sum / weight_sum + 0.5)
     else:
         finalized_casualty.respiratory_rate = DEFAULT_RR
 
     # adding up votes for trauma_head
     system_print("Finalizing trauma head prediction")
     affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.trauma_head == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.trauma_head == 1:
-            affliction_vote += model_weights[index]
+
+    # looping over models
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        if model.casualty.trauma_head == 0:
+            affliction_vote -= model.weight
+        elif model.casualty.trauma_head == 1:
+            affliction_vote += model.weight
 
     # checking final vote count
     if affliction_vote > 0:
@@ -346,11 +385,20 @@ def finalize_afflication_values():
     # adding up votes for trauma_torso
     system_print("Finalizing trauma torso prediction")
     affliction_vote = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.trauma_torso == 0:
-            affliction_vote -= model_weights[index]
-        elif model_prediction.trauma_torso == 1:
-            affliction_vote += model_weights[index]
+
+    # looping over models
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        if model.casualty.trauma_torso == 0:
+            affliction_vote -= model.weight
+        elif model.casualty.trauma_torso == 1:
+            affliction_vote += model.weight
 
     # checking final vote count
     if affliction_vote > 0:
@@ -362,15 +410,23 @@ def finalize_afflication_values():
     system_print("Finalizing trauma lower ext. prediction")
     lower_injury_vote       = 0
     lower_amputation_vote   = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.trauma_lower_ext == 0:
-            lower_injury_vote -= model_weights[index]
-            lower_amputation_vote -= model_weights[index]
-        elif model_prediction.trauma_lower_ext == 2:
-            lower_injury_vote += float(model_weights[index]/2)
-            lower_amputation_vote += model_weights[index]
-        elif model_prediction.trauma_lower_ext == 1:
-            lower_injury_vote += model_weights[index]
+
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        if model.casualty.trauma_lower_ext == 0:
+            lower_injury_vote       -= model.weight
+            lower_amputation_vote   -= model.weight
+        elif model.casualty.trauma_lower_ext == 1:
+            lower_injury_vote       += model.weight
+        elif model.casualty.trauma_lower_ext == 2:
+            lower_injury_vote       += float(model.weight/2)
+            lower_amputation_vote   += model.weight
 
     if (lower_amputation_vote > 0) and (lower_amputation_vote > lower_injury_vote):
         finalized_casualty.trauma_lower_ext = 2
@@ -383,16 +439,28 @@ def finalize_afflication_values():
     system_print("Finalizing trauma upper ext. prediction")
     upper_injury_vote       = 0
     upper_amputation_vote   = 0
-    for index, model_prediction in enumerate(model_predictions, 0):
-        if model_prediction.trauma_upper_ext == 0:
-            upper_injury_vote -= model_weights[index]
-            upper_amputation_vote -= model_weights[index]
-        elif model_prediction.trauma_upper_ext == 2:
-            upper_injury_vote += float(model_weights[index]/2)
-            upper_amputation_vote += model_weights[index]
-        elif model_prediction.trauma_upper_ext == 1:
-            upper_injury_vote += model_weights[index]
 
+    for model in model_array:
+        # checking if current casualty is incoherent and 
+        if not is_coherent:
+            # skiping all coherent dependent models
+            if model.coherent_dependent:
+                continue
+
+        # checking model prediction
+        print("prediction" + str(model.casualty.trauma_upper_ext))
+        if model.casualty.trauma_upper_ext == 0:
+            upper_injury_vote       -= model.weight
+            upper_amputation_vote   -= model.weight
+        elif model.casualty.trauma_upper_ext == 1:
+            upper_injury_vote       += model.weight
+        elif model.casualty.trauma_upper_ext == 2:
+            upper_injury_vote       += float(float(model.weight)/2)
+            upper_amputation_vote   += model.weight
+
+    print("injury count" + str(upper_injury_vote))
+    print("amputation" + str(upper_amputation_vote))
+    
     if (upper_amputation_vote > 0) and (upper_amputation_vote > upper_injury_vote):
         finalized_casualty.trauma_upper_ext = 2
     elif (upper_injury_vote > 0) and (upper_amputation_vote <= upper_injury_vote):
@@ -400,26 +468,26 @@ def finalize_afflication_values():
     else:
         finalized_casualty.trauma_upper_ext = 0
 
-    # finalizing alertness ocular
-    system_print("Finalizing alertness ocular prediction")
-    if model_predictions[MODEL_3_INDEX].alertness_ocular >= 0:
-        finalized_casualty.alertness_ocular = model_predictions[MODEL_3_INDEX].alertness_ocular
-    else:
-        finalized_casualty.alertness_ocular = 0
+    # # finalizing alertness ocular
+    # system_print("Finalizing alertness ocular prediction")
+    # if model_predictions[MODEL_3_INDEX].alertness_ocular >= 0:
+    #     finalized_casualty.alertness_ocular = model_predictions[MODEL_3_INDEX].alertness_ocular
+    # else:
+    #     finalized_casualty.alertness_ocular = 0
 
-    # finalizing alertness verbal
-    system_print("Finalizing alertness verbal prediction")
-    if model_predictions[MODEL_1_INDEX].alertness_verbal >= 0:
-        finalized_casualty.alertness_verbal = model_predictions[MODEL_1_INDEX].alertness_verbal
-    else:
-        finalized_casualty.alertness_verbal = 0
+    # # finalizing alertness verbal
+    # system_print("Finalizing alertness verbal prediction")
+    # if model_predictions[MODEL_1_INDEX].alertness_verbal >= 0:
+    #     finalized_casualty.alertness_verbal = model_predictions[MODEL_1_INDEX].alertness_verbal
+    # else:
+    #     finalized_casualty.alertness_verbal = 0
 
-    # finalizing alertness motor
-    system_print("Finalizing alertness motor prediction")
-    if model_predictions[MODEL_3_INDEX].alertness_motor >= 0:
-        finalized_casualty.alertness_motor = model_predictions[MODEL_3_INDEX].alertness_motor
-    else:
-        finalized_casualty.alertness_motor = 0
+    # # finalizing alertness motor
+    # system_print("Finalizing alertness motor prediction")
+    # if model_predictions[MODEL_3_INDEX].alertness_motor >= 0:
+    #     finalized_casualty.alertness_motor = model_predictions[MODEL_3_INDEX].alertness_motor
+    # else:
+    #     finalized_casualty.alertness_motor = 0
 
 # waits for specified models to finish predictions
 def wait_for_apriltag():
@@ -439,13 +507,10 @@ def wait_for_apriltag():
         system_print("Failed to receive AprilTag")
 
 # resets tracking variables
-def reset_trackers():
-    system_print("Reseting trackers")
+def reset_apriltag_tracker():
+    system_print("Reseting AprilTag tracker")
     global received_april
-    received_april              = False
-
-    for i in range(NUM_OF_MODELS):
-        prediction_received[i] = False
+    received_april = False
 
 # resets apriltag value
 def reset_apriltag():
@@ -453,44 +518,44 @@ def reset_apriltag():
     global apriltag
     apriltag = -1
 
-# this functions resets all of the afflication values to -1
-def reset_casualty_objects():
-    system_print("Reseting casuatly objects")
-    for model_prediction in model_predictions:
-        model_prediction.reset()
-    finalized_casualty.reset()
-
+# resets models in model_array
+def reset_models():
+    for model in model_array:
+        model.reset()
+    
 # sets the AprilTag of the current casualty
-def setApriltag():
+def set_apriltag():
     system_print("Setting AprilTag")
     finalized_casualty.apriltag = apriltag
 
 # handles actions that need to take place when a timer starts
 def onPredictionTimerStart():
-    system_print("Timer has started")
-    reset_casualty_objects()
-    reset_trackers()
-    reset_weights()
+    system_print("Timer has started")    
 
 # handles actions that need to take place when a timer finishes
 def onPredictionTimerEnd():
+    # finalizing and publishing
     system_print("Timer has ended")
     wait_for_predictions()
     finalize_afflication_values()
     publish_reports()
-    reset_casualty_objects()
-    reset_trackers()
-    reset_weights()
+
+    # resetting
+    reset_models()
+    reset_apriltag()
+    reset_apriltag_tracker
+    finalized_casualty.reset()    
 
 # handles actions that need to take place when a timer is cancelled
 def onPredictionTimerCancel():
     system_print("Timer has been cancelled")
-    reset_casualty_objects()
-    reset_trackers()
-    reset_weights()
+    reset_models()
+    finalized_casualty.reset()
+    set_apriltag()
 
 # handles actions corresponding to the timer starting and stopping
 def handlePredictionTimerStatus(msg:Timer_status):
+    # bringing global variable into local scope
     global previousPredictionTimerState
 
     # checking if the timer status has changed
@@ -509,14 +574,11 @@ def handlePredictionTimerStatus(msg:Timer_status):
 # handles actions that take place when the apriltag timer starts
 def onApriltagTimerStart():
     system_print("AprilTag timer has started")
-    reset_apriltag()
 
 # handles actions that take place when the apriltag timer ends
 def onApriltagTimerEnd():
     system_print("AprilTag timer has ended")
-    wait_for_apriltag()
-    setApriltag()
-    reset_apriltag
+    set_apriltag()
 
 # handles actions that take place when the apriltag timer is canceled
 def onApriltagTimerCancel():
@@ -541,7 +603,7 @@ def handle_apriltag_timer_status(msg:Timer_status):
             onApriltagTimerCancel()
 
 # gets the assigned AprilTag and sets it
-def assign_apriltag(assigned_apriltag):
+def receive_apriltag(assigned_apriltag):
     system_print("Received AprilTag")
     global apriltag
     apriltag = assigned_apriltag.apriltag
@@ -581,7 +643,7 @@ if __name__ == "__main__":
     system_print("Registering callback functions")
     rospy.Subscriber('prediction_timer_status', Timer_status, handlePredictionTimerStatus)
     rospy.Subscriber('apriltag_timer_status', Timer_status, handle_apriltag_timer_status)
-    rospy.Subscriber('assigned_apriltag', Assigned_apriltag, assign_apriltag)
+    rospy.Subscriber('assigned_apriltag', Assigned_apriltag, receive_apriltag)
     rospy.Subscriber('model_predictions', Casualty_prediction, receive_model_predictions)
 
     system_print("Waiting for timer to start...")
