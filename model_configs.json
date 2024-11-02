@@ -1,0 +1,16 @@
+{
+    "models" : [
+        {
+            "name" : "Computer Vision",
+            "weight": 1,
+            "coherent_dependent" : false,
+            "determines_coherent" : false
+        },
+        {
+            "name" : "Auditory Model",
+            "weight" : 3,
+            "coherent_dependent" : true,
+            "determines_coherent" : true
+        }
+    ]
+}
