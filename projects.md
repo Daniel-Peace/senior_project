@@ -17,7 +17,7 @@ permalink: /projects/
  }
 </style>
 
-## [Capstone Project]({{ site.baseurl }}{% link senior_project.md %}){: .custom-link}
+## [DTC Prediction Pipelinet]({{ site.baseurl }}{% link senior_project.md %}){: .custom-link}
 This project was worked on for use by Coordinated Robotics. Coordinated Robotics is a robotics team that works with students from CSUCI and is currently competing in DARPA's latest competition. This competition, DTC (DARPA Triage Challenge), is focused on the development of autonomous drones that can perform triage to assist first responders in mass casualty situations. The goal is to use drones to provide data to first responders that will help them assess the situation and determine how best to approach it to save the most lives.
 
 ## [BarterBuddy]({{ site.baseurl }}{% link barterbuddy.md %}){: .custom-link}

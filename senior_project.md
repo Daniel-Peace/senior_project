@@ -1,6 +1,6 @@
 ---
 layout: page
-title: AI/ML Pipeline
+title: DTC Prediction Pipeline
 permalink: /projects/capstone/
 ---
 
@@ -22,7 +22,17 @@ a.custom-link:hover {
 ## Overview
 This project was worked on for use by Coordinated Robotics. Coordinated Robotics is a robotics team that works with students from CSUCI and is currently competing in DARPA's latest competition. This competition, DTC (DARPA Triage Challenge), is focused on the development of autonomous drones that can perform triage to assist first responders in mass casualty situations. The goal is to use drones to provide data to first responders that will help them assess the situation and determine how best to approach it to save the most lives.
 
-With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed.
+<img src="/senior_project/images/bullwinkle.jpg" alt="bullwinkle" style="display: block; margin: 0 auto;border-radius: 10px;">
+
+With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
+
+Alongside working on the pipeline I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
+
+<!-- <img src="/senior_project/images/team_photo.jpg" alt="team-photo" style="display: block; margin: 0 auto;border-radius: 10px;"> -->
+
+Upon completing the pipeline and AI, I was able to test them at the first of three competitions for DTC last October. Though there is room for improvement, as there always is, these two technologies were rather successful and helped our team in placing second overall and first for teams not funded by DARPA.
+
+*Continue reading for a more detailed explination of this project*
 
 ## Implementation
 ### Technologies
@@ -44,11 +54,11 @@ The following cycle is the solution we arrived at:
 
 1. **Waiting to assign AprilTag** - An operator drives a robot to a casualty’s AprilTag, which requires the operator to press the deadman trigger to allow the robot to move.
 
-1. **Assigning AprilTag** - Once the robot is in a good position to scan the AprilTag the deadman trigger is released by the operator, implicitly telling the robot to start scanning the apriltag. This starts a timer for 10 seconds which is visible to the operator through a UI.
+1. **Assigning AprilTag** - Once the robot is in a good position to scan the AprilTag the deadman trigger is released by the operator, implicitly telling the robot to start scanning the AprilTag. This starts a timer for 10 seconds which is visible to the operator through a UI.
 
-1. **Waiting to scan for afflictions** - Once the Apriltag scanning is done, the operator then drives the robot to a location which provides a good angle to scan the casualty for injuries.
+1. **Waiting to scan for afflictions** - Once the AprilTag scanning is done, the operator then drives the robot to a location which provides a good angle to scan the casualty for injuries.
 
-1. **Scanning for affliction** - Again, once the robot is in a good position to scan, the deadman trigger is released by the operator. This again implicitly tells the robot to start scanning, but this time for afflictions.
+1. **Scanning for afflictions** - Again, once the robot is in a good position to scan, the deadman trigger is released by the operator. This again implicitly tells the robot to start scanning, but this time for afflictions.
 
 1. **Finalizing Reports** - After completing the scan for injuries, all predictions from all AI and ML models running on the robot are gathered and combined into a single report. This is accomplished through weighted averages along with a weighted voting system.
 
@@ -72,7 +82,7 @@ These messages contain info about the timer such as the amount of time left as w
 #### Scan and Assign AprilTag
 <img src="/senior_project/images/manikin_with_apriltag.jpg" alt="Mankikin with AprilTag" style="display: block; margin: 0 auto; border-radius: 10px;">
 
-This node is responsible for obtaining the AprilTag that corresponds to the casualty we want to scan. This is done by driving a robot close to the apriltag and releasing the deadman trigger. This starts a 10 second timer. During that time, this node receives a list of tags being detected by ROS's provided AprilTag package. This list contains the tag ID along with information about where it is with respect to the camera that detected it. Using this distance information, the node is able to keep track of which tag is closest during the 10 second timer. Once the time is up the saved tag is sent in a ROS message using the
+This node is responsible for obtaining the AprilTag that corresponds to the casualty we want to scan. This is done by driving a robot close to the AprilTag and releasing the deadman trigger. This starts a 10 second timer. During that time, this node receives a list of tags being detected by ROS's provided AprilTag package. This list contains the tag ID along with information about where it is with respect to the camera that detected it. Using this distance information, the node is able to keep track of which tag is closest during the 10 second timer. Once the time is up the saved tag is sent in a ROS message using the
 `/assigned_apriltag` topic to `finalize_predictions.py` for use in the final report.
 
 #### Model Nodes
@@ -100,7 +110,7 @@ Though the primary focus of this project was on creating the pipeline, I did als
 
 YoloV8 is a convolutional neural network geared towards computer vision and object detection. Though there are pretrained weights that can be used for detecting various types of objects, triage tends to have less data available. With that, a custom dataset was created using provided videos from DARPA as well as data collected at a practice competition hosted in Georgia. The data provided and collected then needed to be broken up into images and cleaned up, keeping only the useful images. 
 
-Next each image needed to be labeled so that YoloV8 could be trained and identify what injury or affliction it should be finding in an image. Once this was done, the model could actually be trained on the data which results in a weight file that can be used for making predictions on future images.
+Next, each image needed to be labeled so that YoloV8 could be trained and identify what injury or affliction it should be finding in an image. Once this was done, the model could actually be trained on the data which results in a weight file that can be used for making predictions on future images.
 
 The next step was implementing this model into the full pipeline. Since we want this model to make a prediction once the prediction timer starts, a helper node was created that keeps track of the current image being published by the robot's camera to the `/usb_cam/image_raw` topic. Once the timer starts, the current image is published to `/picked_image`. `yolov8.py`(the python script I wrote containing the YoloV8 model) is subscribed to this topic and therefore receives the image and makes a prediction about what it sees in that image and publishes the results to `/model_predictions` to be used by `finalize_predictions.py`.
 
@@ -169,7 +179,7 @@ As for the pipeline as a whole, while it did perform well, I think there are sev
 
 - **Configuration File:** Although there is some automation of adding new models to the pipeline, there is definitely still room to make it even easier. I would like to expand the configuration file to incorporate more details about a model that is being added so that the developer of that model has less work to do when implementing the system. Currently it is on the developer to indicate programmatically which afflictions their model will attempt to predict. This is something that could be added to the configuration file to remove that work for the developer. This way it would just be a few lines in a JSON file to define a model and what `finalize_predictions.py` should expect to recieve from that model.
 
-- **Restructuring:** While the project is well-organized overall, I feel that there could be some improvements made to the overall structure of the program allowing it to become more modular and dynamic. This would be useful should future developers want to pull specific data out or plug other programs and features in. This would provide a slightly more future proof setup.
+- **Restructuring:** While the project is well-organized overall, I feel that there could be some improvements made to the overall structure of the program allowing it to become more modular and dynamic. This would be useful should future developers want to pull specific data out or plug other programs and features in. This would provide a slightly more future-proof setup.
 
 ### Acknowledgments
 I want to thank the following people who greatly helped me in this project:

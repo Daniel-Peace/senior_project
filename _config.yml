@@ -19,7 +19,6 @@
 # in the templates via {{ site.myvariable }}.
 
 title: Daniel Peace
-email: danielpeace805@gmail.com
 description: Daniel Peace - Computer Science Graduate | Projects in Software Development, AI, and Machine Learning. Explore my portfolio, skills, and contact info.
 baseurl: "/senior_project" # the subpath of your site, e.g. /blog
 url: "https://Daniel-Peace.github.io" # the base hostname & protocol for your site, e.g. http://example.com
