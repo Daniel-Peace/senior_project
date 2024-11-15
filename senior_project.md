@@ -28,7 +28,7 @@ With that in mind, this project focused on integrating AI and ML models and crea
 
 Alongside working on the pipeline I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
 
-<!-- <img src="/senior_project/images/team_photo.jpg" alt="team-photo" style="display: block; margin: 0 auto;border-radius: 10px;"> -->
+<img src="/senior_project/images/team_photo.jpg" alt="team-photo" style="display: block; margin: 0 auto;border-radius: 10px;">
 
 Upon completing the pipeline and AI, I was able to test them at the first of three competitions for DTC last October. Though there is room for improvement, as there always is, these two technologies were rather successful and helped our team in placing second overall and first for teams not funded by DARPA.
 
