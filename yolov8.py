@@ -53,7 +53,6 @@ from sensor_msgs.msg    import Image
 from ultralytics        import YOLO
 from cv_bridge          import CvBridge
 from messages.msg       import Casualty_prediction
-from ultralytics.utils  import WEIGHTS_DIR
 
 # ================================== CHANGE THESE IF NEEDED ===================================
 
