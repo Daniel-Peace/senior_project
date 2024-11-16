@@ -63,11 +63,13 @@ CONFIDENCE_THRESHOLD    = 0
 # =============================================================================================
 
 # general constants
-RUN_WITH_CAMERA         = 0
-RUN_WITH_PATH           = 1
 MODEL_NUMBER            = 0
 
-# affliction types that YOLOv8 will predict
+# operation mode (enum)
+RUN_WITH_CAMERA         = 0
+RUN_WITH_PATH           = 1
+
+# affliction types that YOLOv8 will predict (enum)
 TRAUMA_HEAD             = 0
 TRAUMA_TORSO            = 1
 TRAUMA_LOWER_EXT        = 2
