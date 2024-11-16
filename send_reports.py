@@ -2,15 +2,34 @@
 # Daniel Peace
 # CSUCI / Coordinated Robotics - DTC
 # -------------------------------------------------------------------------------------------
-# This program is responsible for submitting finalized predictions to the scoring
-# server. It creates callback functions for each report type and submits
-# all ROS messages received from those topics. It also peridically sends a request
+# This program is responsible for submitting a finalized prediction to the scoring
+# server using API endpoints provided by DARPA. It creates callback functions for 
+# each report type and submits all ROS messages received from those topics to their
+# corresponding endpoint. 
+# These callback functions check the following topics for reports:
+# - /injury_report
+# - /critical_report
+# - /vitals_report
+#  
+# It also periodically sends a request
 # for a status update. The responses from each HTTP request is published to a corresponding
 # ROS topic:
 #   - critical_response
 #   - vitals_response
 #   - injury_response
 #   - status
+#
+# When sending requests to the server, DARPA is using a BREARER token to verify who is 
+# connecting. This must be included in the header of the request and can be changed by adding
+# in a another constant for the new token and then setting the ACTIVE_TOKEN equal to your new
+# token constant.
+#
+# The same approach can be taken should you need to update the IP address of the server.
+#
+# This program will also publish a "Response_statuses.msg" after each attempt to submit a
+# a report. This is currently only used by the GUI to inform the user whether or not all
+# reports were successfully submitted. They are published to the "/response_statuses" topic
+# 
 # -------------------------------------------------------------------------------------------
 
 import json
@@ -24,14 +43,19 @@ from messages.msg       import Injury_report_response
 from messages.msg       import Status
 from messages.msg       import Vitals_report
 from messages.msg       import Vitals_report_response
+from messages.msg       import Response_status
 
 # general constants
 BAR = "---------------------------------------------------------------------"
+
+# ================================== CHANGE THESE IF NEEDED ===================================
 
 # network constants
 TEST_HOST   = 'http://0.0.0.0:80'
 HOST        = 'http://10.200.1.100:80'
 ACTIVE_HOST = TEST_HOST
+
+# these endpoints shouldn't change unless DARPA changes the scoring system
 ENDPOINT_S  = '/api/status'
 ENDPOINT_C  = '/api/critical'
 ENDPOINT_V  = '/api/vitals'
@@ -40,6 +64,8 @@ ENDPOINT_I  = '/api/injury'
 # bearer tokens
 TEST_TOKEN      = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4M2Q3OGM4ZS04MzhhLTQ0NzctOWM3Yi02N2VmMTZlNWY3MTYiLCJpIjowfQ.i4KuwEtc5_6oIYz5TDWcdzl5bMkvCpLZTSZG2Avy84w'
 ACTIVE_TOKEN    = TEST_TOKEN
+
+# =============================================================================================
 
 # creating URLs
 status_url      = "{}{}".format(ACTIVE_HOST, ENDPOINT_S)
@@ -59,6 +85,7 @@ status_pub              = rospy.Publisher('status', Status, queue_size=10)
 critical_response_pub   = rospy.Publisher('critical_response', Critical_report_response, queue_size=10)
 vitals_response_pub     = rospy.Publisher('vitals_response', Vitals_report_response, queue_size=10)
 injury_response_pub     = rospy.Publisher('injury_response', Injury_report_response, queue_size=10)
+response_status_pub     = rospy.Publisher('response_statuses', Response_status, queue_size=11)
 
 # used for printing system messages
 def system_print(s):
@@ -88,6 +115,7 @@ def print_hreaders():
 
 # posts a critical report to the scoring server
 def post_critical_report(r):
+    # cancels submission if no AprilTag was found
     if r.casualty_id < 0:
         system_print("No casualty ID found. Skipping report")
         return
@@ -101,12 +129,23 @@ def post_critical_report(r):
         "value":        r.value
     }
 
-    # printing report
+    # printing report for reference
     system_print("Critical report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
+    # attempting to submit report
     try:
         # sending post request
         response = requests.post(critical_url, headers = json_headers, json = report)
+
+        # creating and publishing response status message
+        response_status = Response_status()
+        if response.status_code == 200:
+            response_status.response_ok = True
+        else:
+            response_status.response_ok = False
+        response_status_pub.publish(response_status)
+
+        # raising exception if something went wrong
         response.raise_for_status()
 
         # printing response
@@ -132,15 +171,20 @@ def post_critical_report(r):
         # publishing response to injury report
         critical_response_pub.publish(critical_report_response)
                 
-    except requests.exceptions.RequestException as errex: 
+    except requests.exceptions.RequestException as errex:
+        # handling exception
+        response_status = Response_status()
+        response_status.response_ok = False
+        response_status_pub.publish(response_status)
+
         system_print("Exception request")
         print(BAR + "\n")
         print(errex)
         print(BAR)
-    
 
 # posts a vitals report
 def post_vitals_report(r):
+    # cancels submission if no AprilTag was found
     if r.casualty_id < 0:
         system_print("No casualty ID found. Skipping report")
         return
@@ -158,9 +202,20 @@ def post_vitals_report(r):
     # printing report
     system_print("Vitals report:\n" + BAR + "\n" + str(json.dumps(report, indent=2)) + "\n" + BAR)
 
+    # attempting to submit report
     try:
         # sending post request
         response = requests.post(vitals_url, headers = json_headers, json = report)
+
+        # creating and publishing response status message
+        response_status = Response_status()
+        if response.status_code == 200:
+            response_status.response_ok = True
+        else:
+            response_status.response_ok = False
+        response_status_pub.publish(response_status)
+
+        # raising exception if something went wrong
         response.raise_for_status()
 
         # printing response
@@ -187,7 +242,11 @@ def post_vitals_report(r):
         # publishing response to injury report
         vitals_response_pub.publish(vitals_report_response)
        
-    except requests.exceptions.RequestException as errex: 
+    except requests.exceptions.RequestException as errex:
+        # handling exception
+        response_status = Response_status()
+        response_status.response_ok = False
+        response_status_pub.publish(response_status)
         system_print("Exception request")
         print(BAR + "\n")
         print(errex)
@@ -195,6 +254,7 @@ def post_vitals_report(r):
 
 # posts a injury report
 def post_injury_report(r):
+    # cancels submission if no AprilTag was found
     if r.casualty_id < 0:
         system_print("No casualty ID found. Skipping report")
         return
@@ -214,6 +274,16 @@ def post_injury_report(r):
     try:
         # sending post request
         response = requests.post(injury_url, headers = json_headers, json = report)
+
+        # creating and publishing response status message
+        response_status = Response_status()
+        if response.status_code == 200:
+            response_status.response_ok = True
+        else:
+            response_status.response_ok = False
+        response_status_pub.publish(response_status)
+
+        # raising exception if something went wrong
         response.raise_for_status()
 
         # printing response
@@ -239,13 +309,17 @@ def post_injury_report(r):
         # publishing response to injury report
         injury_response_pub.publish(injury_report_response)
        
-    except requests.exceptions.RequestException as errex: 
+    except requests.exceptions.RequestException as errex:
+        # handling exception
+        response_status = Response_status()
+        response_status.response_ok = False
+        response_status_pub.publish(response_status)
         system_print("Exception request")
         print(BAR + "\n")
         print(errex)
         print(BAR)
 
-#listens for status messages and registers a callback function for the injury
+# listens for status messages and registers a callback function for the different affliction categories
 def listener():
     # initializing node
     rospy.init_node('report_node', anonymous=True)
@@ -258,8 +332,7 @@ def listener():
     # looping until program is quit
     while not rospy.is_shutdown():
 
-
-        # sending get request for status message
+        # attempting to send get request for status message
         try:
             response = requests.get(status_url, headers = json_headers)
             response.raise_for_status()
@@ -267,7 +340,7 @@ def listener():
             # printing response from server
             system_print("Status response:\n" + BAR + "\n" + str(json.dumps(response.json(), indent=2)) + "\n" + BAR)
 
-            # creating message to publish
+            # creating status message to publish
             status_msg = Status()
             status_msg.clock                                        = response.json()["clock"]
             status_msg.team                                         = response.json()["team"]
@@ -286,17 +359,18 @@ def listener():
 
             # publishing status message
             status_pub.publish(status_msg)
-        except requests.exceptions.RequestException as errex: 
+
+        except requests.exceptions.RequestException as errex:
+            # handling exception
             system_print("Exception request")
             print(BAR + "\n")
             print(errex)
             print(BAR + "\n")
-            
 
         # sleeping to slow the loop down
         time.sleep(5)
 
-# Runs the the following code if this script is run by itself
+# "main function" of the program
 if __name__ == "__main__":
     print_urls()
     print_hreaders()
