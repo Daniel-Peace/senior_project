@@ -36,7 +36,7 @@ Though they are not strictly required, the following hardware is helpful should 
 
 ## Getting started:
 Before we dive into starting up the pipeline and computer vision model
-I want to give a breif description of each node and what it does:
+I want to give a breif description of what each node and class does, and how it may be configured:
 
 ### yolov8.py
 This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible affliction
@@ -45,13 +45,13 @@ user or by using images published to the `/picked_image` topic. The results of t
 prediction are stored in a ROS message of type `Casualty_prediction` and published to the
 `model_predictions` topic.
 
-The ROS message "Casualty_prediction" initializes to all 0s for all affliction values
+The ROS message `Casualty_prediction` initializes to all 0s for all affliction values
 With that, when the model can make predictions about an affliction but
 does not, it should be assumed that the casualty does not have that
 specific affliction and the field in the ROS message should be left as zero.
 
-The model pulls the weights from a folder in the src directory named "weights".
-You can change the weights being used by changing the WEIGHTS constant to a path of
+The model pulls the weights from a folder in the src directory named `weights`.
+You can change the weights being used by changing the `WEIGHTS` constant to a path of
 your choosing.
 
 The confidence value threshold for what predictions are published can be set with the
@@ -78,6 +78,63 @@ ROS topic subscriptions:
 
 ROS topics for publishing
 - `/model_predictions`
+
+### timer.py
+This program handles timers surrounding AprilTag detections and affliction predictions.
+It cycles through the following timers:
+- A countdown timer for when you are about to scan for an AprilTag
+- A timer for scanning the AprilTag
+- A countdown timer for when you are about to scan for afflictions
+- A timer for scanning for afflictions
+
+It publishing `Timer_state` ROS messages, which contain a timer's current status along with
+the amount of time left, to:
+- `/apriltag_countdown_timer_state`
+- `/apriltag_scanning_timer_state`
+- `/prediction_countdown_timer_state`
+- `/prediction_scanning_timer_state`
+
+It triggers these timers by detecting if a trigger on a controller is not being pressed.
+It receives info about the triggers state from the `/button_status` topic.
+
+The length of the timers can be changed using the following constants:
+- `BUTTON_TIMER_LENGTH`
+- `APRILTAG_TIMER_LENGTH`
+- `PREDICTION_TIMER_LENGTH`
+
+You will notice a few additional topics that this program publishes to. These are for use
+by the GUI to allow some of its elements to update. These topics include:
+- `/current_timer` (used to indicate which timer is active)
+- `/loop_state` (used to determine which part of the pipeline loop we are in)
+
+### send_report.py
+This program is responsible for submitting a finalized prediction to the scoring
+server using API endpoints provided by DARPA. It creates callback functions for
+each report type and submits all ROS messages received from those topics to their
+corresponding endpoint.
+These callback functions check the following topics for reports:
+- `/injury_report`
+- `/critical_report`
+- `/vitals_report`
+
+It also periodically sends a request
+for a status update. The responses from each HTTP request is published to a corresponding
+ROS topic:
+- `/critical_response`
+- `/vitals_response`
+- `/injury_response`
+- `/status`
+
+When sending requests to the server, DARPA is using a bearer token to verify who is
+connecting. This must be included in the header of the request and can be changed by adding
+in a another constant for the new token and then setting the `ACTIVE_TOKEN` equal to your new
+token constant.
+
+The same approach can be taken should you need to update the IP address of the server.
+
+This program will also publish a `Response_statuses.msg` after each attempt to submit a
+a report. This is currently only used by the GUI to inform the user whether or not all
+reports were successfully submitted. They are published to the `/response_statuses` topic
 
 ### button_press.py
 This program also contains a constant, `DEBUG`, which when set to `True` allows you to
