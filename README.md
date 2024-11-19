@@ -3,7 +3,7 @@ This project was worked on for use by Coordinated Robotics. Coordinated Robotics
 
 ![rock-crawler-drone](./photos/bullwinkle.jpg)
 
-#### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil), used under fair use.
+###### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil), used under fair use.
 
 
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
