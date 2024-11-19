@@ -19,38 +19,63 @@ Upon completing the pipeline and AI, I was able to test them at the first of thr
 Before getting started, you will want to make sure you ahve the following installed:
 - Ubuntu 1.20.4
 - ROS Noetic
-  - May need to install AprilTag Package seperately
-  - May need to install USB camera node
-  - May need to isntall joystick node
+  - May need to install [`apriltag_ros`](https://wiki.ros.org/apriltag_ros) package
+  - May need to install [`usb_cam`](https://wiki.ros.org/usb_cam) package
+  - May need to install [`joy`](https://wiki.ros.org/joy) package
 - Python3
 - YOLOv8 by Ultralytics
 - CUDA for NVDIA graphicscards
 - PyQt5 (if you wish to use the GUI)
 
 ### Hardware
-Though not strictly required teh following is helpful should you want to use certain aspects of this project:
+Though they are not strictly required, the following hardware is helpful should you want to use certain aspects of this project:
 - Webcam
 - Game controller (Xbox 360 is known to be supported)
 
 ## Getting started:
-Before starting all of the ros nodes and using the pipeline there are a few things to check and configure:
+Before we dive into starting up the pipeline and computer vision model
+I want to give a breif description of each node and what it does:
 
 ### yolov8.py
-There are a couple of things to check in the `yolov8.py` file.
-First there is a constant `DEBUG`. When this is set to `True` the
-program runs in debug mode, allowing you to choose whether you
-want to pass in a path to an image or run YOLOv8 using an image from
-the USB camera. If set to `False` the program defaults to using the USB
-camera.
+This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible affliction
+someone may have. It provides the options of running the model using a path provided by the
+user or by using images published to the `/picked_image` topic. The results of the model
+prediction are stored in a ROS message of type `Casualty_prediction` and published to the
+`model_predictions` topic.
 
-There is also a constant `WEIGHTS` which be set to the path to the
-weights you wish to use while making predictions.
+The ROS message "Casualty_prediction" initializes to all 0s for all affliction values
+With that, when the model can make predictions about an affliction but
+does not, it should be assumed that the casualty does not have that
+specific affliction and the field in the ROS message should be left as zero.
 
-Lastly there is a constant, `CONFIDENCE_THRESHOLD`, which should be set
-to a float value from 0 to 1 inclusive. This value tells the program what
-the threshold confidence value should be to accept a prediction. As an example,
-if the value was set to 0.63, only prediction with a confidence of
-0.63 and above would be accepted
+The model pulls the weights from a folder in the src directory named "weights".
+You can change the weights being used by changing the WEIGHTS constant to a path of
+your choosing.
+
+The confidence value threshold for what predictions are published can be set with the
+constant `CONFIDENCE_THRESHOLD`. Any predictions that have a confidence value below this
+threshold will be ignored.
+
+You may choose if you would like to pass in a path to an image or have the program pull
+images from the `/picked_image` topic by using the DEBUG flag. If this is set to true, you
+will have the choice to run the program with either a path to an image or using images
+published to the `/picked_image` topic. If `DEBUG` is set to false the program will run with
+the camera by default.
+
+Affliction types that can be predicted:
+- trauma_head
+- trauma_torso
+- trauma_lower_ext
+- amputation_lower_ext
+- trauma_upper_ext
+- amputation_upper_ext
+- severe_hemorrhage
+
+ROS topic subscriptions:
+- `/picked_image`
+
+ROS topics for publishing
+- `/model_predictions`
 
 ### button_press.py
 This program also contains a constant, `DEBUG`, which when set to `True` allows you to
