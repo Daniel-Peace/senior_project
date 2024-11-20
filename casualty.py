@@ -33,7 +33,6 @@
 # DESCRIPTION: This method formats and prints all members of this class.
 # -------------------------------------------------------------------------------------------
 
-# imports
 import rospy
 
 # ROS messages
@@ -47,9 +46,13 @@ v_publisher = rospy.Publisher('vitals_report', Vitals_report, queue_size=10)
 i_publisher = rospy.Publisher('injury_report', Injury_report, queue_size=10)
 
 class Casualty:
-    # general constants
+   
+    # ================================== CHANGE THESE IF NEEDED ===================================
+
     TEAM_NAME   = "coordinated robotics"
     SYSTEM      = "JOE"
+
+    # =============================================================================================
 
     # critical afflication options
     SEVERE_HEMORRHAGE       = 0
