@@ -1,8 +1,7 @@
-
 # -------------------------------------------------------------------------------------------
 # Daniel Peace
 # CSUCI / Coordinated Robotics - DTC
 # -------------------------------------------------------------------------------------------
-# Am array to hold all model prediction status messages
+# Used to hold whether an HTTP request returned a 200 or not
 
-ModelPredictionStatus[] modelPredictionStatuses
+bool response_ok

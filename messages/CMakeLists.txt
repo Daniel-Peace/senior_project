@@ -8,28 +8,26 @@ find_package(catkin REQUIRED COMPONENTS message_generation std_msgs sensor_msgs)
 
 add_message_files(
   FILES
-  Critical.msg
-  Critical_report.msg
-  Critical_report_response.msg
-  Injury.msg
-  Injury_report.msg
-  Injury_report_response.msg
-  Prediction.msg
-  Prediction_element.msg
-  Remaining_reports.msg
-  Status.msg
-  Vitals.msg
-  Vitals_report.msg
-  Vitals_report_response.msg
-  Timer_status.msg
   Assigned_apriltag.msg
   Casualty_prediction.msg
-  Pinned_apriltag.msg
   Command.msg
+  Critical_report_response.msg
+  Critical_report.msg
+  Critical.msg
   Current_timer.msg
+  Injury_report_response.msg
+  Injury_report.msg
+  Injury.msg
+  LoopState.msg
   ModelPredictionStatus.msg
   ModelPredictionStatuses.msg
-  LoopState.msg
+  Remaining_reports.msg
+  Response_status.msg
+  Status.msg
+  Timer_state.msg
+  Vitals_report_response.msg
+  Vitals_report.msg
+  Vitals.msg
 )
 
 include_directories(
