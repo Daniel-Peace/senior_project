@@ -30,7 +30,7 @@ model_predictions = []
 # ================================== CHANGE THESE IF NEEDED ===================================
 
 # Set to True if you want to have this node run based on the prediction timer
-TIMER_BASED = False
+TIMER_BASED = True
 
 # computer vision model
 model_0_prediction = Casualty_prediction()
@@ -182,10 +182,10 @@ if __name__ == '__main__':
         while not rospy.is_shutdown():
             # sleeping to slow the loop down
             time.sleep(0.2)
-            print_horizontal_line()
-            system_print("Exiting...")
-            print_horizontal_line()
-            exit(0)
+        print_horizontal_line()
+        system_print("Exiting...")
+        print_horizontal_line()
+        exit(0)
     else:
         # looping until program is terminated
         while True:

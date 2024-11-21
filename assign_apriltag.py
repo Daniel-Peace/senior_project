@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -------------------------------------------------------------------------------------------
 # Daniel Peace
 # CSUCI / Coordinated Robotics - DTC
@@ -8,25 +9,22 @@
 # reset the program. 
 # -------------------------------------------------------------------------------------------
 
-# imports
 import time
 import rospy
-
-# ROS messages
 from messages.msg       import Assigned_apriltag
 from messages.msg       import Timer_status
 from apriltag_ros.msg   import AprilTagDetectionArray
 
-# timer states
-TIMER_ENDED  = 0
-TIMER_STARTED    = 1
-TIMER_CANCELLED  = 2
+# timer states (enum)
+TIMER_ENDED         = 0
+TIMER_STARTED       = 1
+TIMER_CANCELLED     = 2
 
 # global variables
 current_apriltag        = -1
 current_distance        = 999
 apriltag_timer_started  = False
-previous_timer_status = -1
+previous_timer_status   = -1
 
 # initializing node
 rospy.init_node('assign_apriltag', anonymous=True)
@@ -42,7 +40,6 @@ def system_print(s):
 def reset():
     system_print("Resetting global variables for next scan")
 
-    # bringing global variables into local scope
     global current_apriltag
     global current_distance
     global apriltag_timer_started
@@ -52,14 +49,14 @@ def reset():
     apriltag_timer_started  = False
 
 # this function publishes the currently picked apriltag
-def publishApriltag():
+def publish_apriltag():
     system_print("Publishing Apriltag")
     assignedApriltag = Assigned_apriltag()
     assignedApriltag.apriltag = current_apriltag
     publisher.publish(assignedApriltag)
 
 # updates the current AprilTag to the closest AprilTag in view of the camera
-def updateCurrentApriltag(msg:AprilTagDetectionArray):
+def update_current_apriltag(msg:AprilTagDetectionArray):
     # checking if an AprilTag has been detected
     if len(msg.detections) != 0:
         system_print("Detected AprilTag")
@@ -76,11 +73,10 @@ def updateCurrentApriltag(msg:AprilTagDetectionArray):
                     system_print("Current AprilTag: " + str(current_apriltag))
                     current_distance = detection.pose.pose.pose.position.z
 
-            publishApriltag()            
+            publish_apriltag()            
 
 # handles actions that take place when the apriltag timer starts
-def onApriltagTimerStart():
-    # bringing global variable into local scope
+def on_apriltag_timer_start():
     global apriltag_timer_started
 
     system_print("AprilTag timer has started")
@@ -89,8 +85,7 @@ def onApriltagTimerStart():
     system_print("\"timer_started\" updated to: " + str(apriltag_timer_started))
 
 # handles actions that take place when the apriltag timer ends
-def onApriltagTimerEnd():
-    # bringing global variable into local scope
+def on_apriltag_timer_end():
     global apriltag_timer_started
 
     system_print("AprilTag timer has ended")
@@ -99,8 +94,7 @@ def onApriltagTimerEnd():
     system_print("Final AprilTag: " + str(current_apriltag))
 
 # handles actions that take place when the apriltag timer is canceled
-def onApriltagTimerCancel():
-    # bringing global variable into local scope
+def on_apriltag_timer_cancel():
     global apriltag_timer_started
 
     system_print("AprilTag timer has been cancelled")
@@ -109,8 +103,7 @@ def onApriltagTimerCancel():
     reset()
 
 # handles actions that take place on timer start and stop
-def handleApriltagTimerStatus(timer):
-    # bringing global variable into local scope
+def handle_apriltag_timer_status(timer):
     global previous_timer_status
 
     # checking if the timer status has changed
@@ -120,18 +113,19 @@ def handleApriltagTimerStatus(timer):
 
         # checking timer state
         if timer.timer_status == TIMER_STARTED:
-            onApriltagTimerStart()
+            on_apriltag_timer_start()
         elif timer.timer_status == TIMER_ENDED:
-            onApriltagTimerEnd()
+            on_apriltag_timer_end()
         else:
-            onApriltagTimerCancel()
+            on_apriltag_timer_cancel()
 
+# "main function" of the program
 if __name__ == "__main__":
     print("---------------------------------------------------------------------")
     # registering callback functions
     system_print("Registering callback functions")
-    rospy.Subscriber('tag_detections', AprilTagDetectionArray, updateCurrentApriltag)
-    rospy.Subscriber('apriltag_timer_status', Timer_status, handleApriltagTimerStatus)
+    rospy.Subscriber('tag_detections', AprilTagDetectionArray, update_current_apriltag)
+    rospy.Subscriber('apriltag_scanning_timer_state', Timer_status, handle_apriltag_timer_status)
 
     system_print("Waiting for timer to start...")
 
