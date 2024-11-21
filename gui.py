@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This is the main program for the GUI. It pulls all of its UI elements from the components
+# folder. This was made strictly for a capstone demo. To explain this in detail would be
+# for too much writing. There are some banners that inform you as to where you should add
+# what, should you want to further develope of this GUI
+# -------------------------------------------------------------------------------------------
 
 import sys
 import rospy
@@ -7,7 +16,7 @@ import numpy as np
 from apriltag_ros.msg   import AprilTagDetectionArray
 from cv_bridge          import CvBridge, CvBridgeError
 from sensor_msgs.msg    import Image
-from messages.msg       import Timer_status, Current_timer, Casualty_prediction, ModelPredictionStatuses, Assigned_apriltag, LoopState
+from messages.msg       import Timer_state, Current_timer, Casualty_prediction, ModelPredictionStatuses, Assigned_apriltag, LoopState, Response_status
 from apriltag_ros.msg   import AprilTagDetectionArray
 from PyQt5.QtWidgets    import QApplication
 from PyQt5.QtCore       import QObject, pyqtSignal, QTimer
@@ -15,13 +24,16 @@ from components         import MainWindow
 from casualty           import Casualty
 
 # global variables
-reportNumber = 0
+reportNumber        = 0
+responsesReceived   = 0
+casualty            = None
+reportsReceivedOK   = True
 
 # creates signals for updating UI
 class Communicator(QObject):
-    # -------------------------------------------------------
+    # =============================================================================================
     # ADD NEW SIGNALS HERE
-    # -------------------------------------------------------
+    # =============================================================================================
     updateImageSignal                   = pyqtSignal(np.ndarray)
     updateAprilTagCountdown             = pyqtSignal(str)
     updateAprilTagTimer                 = pyqtSignal(str)
@@ -37,18 +49,17 @@ class Communicator(QObject):
     updateTextColorPredictionTimer      = pyqtSignal(str)
     updateCurrentTagDetections          = pyqtSignal(str)
     updateCurrentPredictions            = pyqtSignal(Casualty)
-    updateReportList                    = pyqtSignal(str, Casualty)
+    updateReportList                    = pyqtSignal(str, Casualty, str)
     updateModelReportStatuses           = pyqtSignal(str)
     updateCurrentlyPickedApriltag       = pyqtSignal(str)
     updateAprilTagBoxes                 = pyqtSignal(AprilTagDetectionArray)
     updateLoopState                     = pyqtSignal(str)
 
 
-# -------------------------------------------------------
+# =============================================================================================
 # ADD CALLBACK FUNCTIONS HERE
-# -------------------------------------------------------
+# =============================================================================================
 
-# handles incoming images from the usb_cam/image_raw ROS topic
 def handle_incoming_images(msg):
     # creating CV bridge to convert ROS images to CV images
     bridge = CvBridge()
@@ -172,7 +183,8 @@ def handle_current_tag_detections(msg:AprilTagDetectionArray):
     communicator.updateAprilTagBoxes.emit(msg)
 
 def handle_finalized_reports(msg:Casualty_prediction):
-    global reportNumber
+    global casualty
+
     casualty = Casualty()
     casualty.apriltag               = msg.apriltag
     casualty.is_coherent            = msg.is_coherent
@@ -188,10 +200,6 @@ def handle_finalized_reports(msg:Casualty_prediction):
     casualty.alertness_ocular       = msg.alertness_ocular
     casualty.alertness_verbal       = msg.alertness_verbal
     casualty.alertness_motor        = msg.alertness_motor
-    communicator.updateCurrentPredictions.emit(casualty)
-    reportTitle = "Report " + str(reportNumber)
-    reportNumber += 1
-    communicator.updateReportList.emit(reportTitle, casualty)
 
 def handle_model_prediction_statuses(msg:ModelPredictionStatuses):
     status_list = ""
@@ -208,8 +216,35 @@ def handle_loop_states(msg:LoopState):
     loopState = msg.state
     communicator.updateLoopState.emit(loopState)
 
+def handle_report_statuses(msg:Response_status):
+    global responsesReceived
+    global reportNumber
+    global reportsReceivedOK
+
+    print("Received reponse status message with value: " + str(msg.response_ok))
+
+    red     = "#C37679"
+    green   = "#A7C087"
+
+    responsesReceived   += 1
+
+    if not msg.response_ok:
+        reportsReceivedOK = False
+
+    if responsesReceived == 11:
+        communicator.updateCurrentPredictions.emit(casualty)
+        reportTitle = "Report " + str(reportNumber) + " (Reported by: " + str(casualty.SYSTEM) + ")"
+
+        if reportsReceivedOK:
+            communicator.updateReportList.emit(reportTitle, casualty, green)
+        else:
+            communicator.updateReportList.emit(reportTitle, casualty, red)
+
+        responsesReceived = 0
+        reportsReceivedOK = True
+        reportNumber        += 1
     
-# "main function"
+# "main function" of the program
 if __name__ == "__main__":
     # initializing gui as ROS node
     rospy.init_node('gui_main', anonymous=True)
@@ -223,9 +258,9 @@ if __name__ == "__main__":
     # creating communicator object facilitates the use of signals
     communicator = Communicator()
 
-    # -------------------------------------------------------
+    # =============================================================================================
     # CONNECT SIGNALS HERE
-    # -------------------------------------------------------
+    # =============================================================================================
     communicator.updateImageSignal.connect(window.videoView.update_image)
     communicator.updateAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyText)
     communicator.updateBackgroundAprilTagCountdown.connect(window.aprilTagCountdownCard.updateBodyBackgroundColor)
@@ -248,20 +283,21 @@ if __name__ == "__main__":
     communicator.updateLoopState.connect(window.loopState.updateBodyText)
     communicator.updateAprilTagBoxes.connect(window.videoView.updateTagDetections)
 
-    # -------------------------------------------------------
+    # =============================================================================================
     # ADD ROS TOPICS HERE
-    # -------------------------------------------------------
+    # =============================================================================================
     rospy.Subscriber('usb_cam/image_raw', Image, handle_incoming_images)
-    rospy.Subscriber('apriltag_countdown_status', Timer_status, handle_apriltag_countdown)
-    rospy.Subscriber('apriltag_timer_status', Timer_status, handle_apriltag_timer)
-    rospy.Subscriber('prediction_countdown_status', Timer_status, handle_prediction_countdown)
-    rospy.Subscriber('prediction_timer_status', Timer_status, handle_prediction_timer)
+    rospy.Subscriber('apriltag_countdown_timer_state', Timer_state, handle_apriltag_countdown)
+    rospy.Subscriber('apriltag_scanning_timer_state', Timer_state, handle_apriltag_timer)
+    rospy.Subscriber('prediction_countdown_timer_state', Timer_state, handle_prediction_countdown)
+    rospy.Subscriber('prediction_scanning_timer_state', Timer_state, handle_prediction_timer)
     rospy.Subscriber('current_timer', Current_timer, handle_current_timer)
     rospy.Subscriber('tag_detections', AprilTagDetectionArray, handle_current_tag_detections)
     rospy.Subscriber('final_report', Casualty_prediction, handle_finalized_reports)
     rospy.Subscriber('model_prediction_statuses', ModelPredictionStatuses, handle_model_prediction_statuses)
     rospy.Subscriber('assigned_apriltag', Assigned_apriltag, handle_assigned_apriltag)
     rospy.Subscriber('loop_state', LoopState, handle_loop_states)
+    rospy.Subscriber('response_statuses', Response_status, handle_report_statuses)
 
     # showing main window
     window.show()
@@ -271,4 +307,5 @@ if __name__ == "__main__":
     timer.timeout.connect(lambda: rospy.rostime.wallsleep(0.01))
     timer.start(10)
 
+    # starting app
     sys.exit(app.exec_())
