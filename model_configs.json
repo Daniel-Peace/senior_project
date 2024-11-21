@@ -1,0 +1,72 @@
+{
+    "models" : [
+        {
+            "name"                          :"Computer Vision",
+            "weight"                        :1,
+            "coherent_dependent"            :false,
+            "determines_coherency"          :false,
+            "predicts_severe_hemorrhage"    :true,
+            "predicts_respiratory_distress" :false,
+            "predicts_heart_rate"           :false,
+            "predicts_respiratory_rate"     :false,
+            "predicts_trauma_head"          :true,
+            "predicts_trauma_torso"         :true,
+            "predicts_trauma_lower_ext"     :true,
+            "predicts_trauma_upper_ext"     :true,
+            "predicts_alertness_ocular"     :false,
+            "predicts_alertness_verbal"     :false,
+            "predicts_alertness_motor"      :false
+        },
+        {
+            "name"                          :"Auditory Model",
+            "weight"                        :3,
+            "coherent_dependent"            :true,
+            "determines_coherency"          :true,
+            "predicts_severe_hemorrhage"    :true,
+            "predicts_respiratory_distress" :true,
+            "predicts_heart_rate"           :false,
+            "predicts_respiratory_rate"     :false,
+            "predicts_trauma_head"          :true,
+            "predicts_trauma_torso"         :true,
+            "predicts_trauma_lower_ext"     :true,
+            "predicts_trauma_upper_ext"     :true,
+            "predicts_alertness_ocular"     :false,
+            "predicts_alertness_verbal"     :true,
+            "predicts_alertness_motor"      :false
+        },
+        {
+            "name"                          :"Face Mesh/Joints",
+            "weight"                        :1,
+            "coherent_dependent"            :false,
+            "determines_coherency"          :false,
+            "predicts_severe_hemorrhage"    :false,
+            "predicts_respiratory_distress" :false,
+            "predicts_heart_rate"           :true,
+            "predicts_respiratory_rate"     :false,
+            "predicts_trauma_head"          :false,
+            "predicts_trauma_torso"         :false,
+            "predicts_trauma_lower_ext"     :false,
+            "predicts_trauma_upper_ext"     :false,
+            "predicts_alertness_ocular"     :true,
+            "predicts_alertness_verbal"     :true,
+            "predicts_alertness_motor"      :true
+        },
+        {
+            "name"                          :"Depth Camera",
+            "weight"                        :1,
+            "coherent_dependent"            :false,
+            "determines_coherency"          :false,
+            "predicts_severe_hemorrhage"    :false,
+            "predicts_respiratory_distress" :true,
+            "predicts_heart_rate"           :false,
+            "predicts_respiratory_rate"     :true,
+            "predicts_trauma_head"          :false,
+            "predicts_trauma_torso"         :false,
+            "predicts_trauma_lower_ext"     :false,
+            "predicts_trauma_upper_ext"     :false,
+            "predicts_alertness_ocular"     :false,
+            "predicts_alertness_verbal"     :false,
+            "predicts_alertness_motor"      :false
+        }
+    ]
+}

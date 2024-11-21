@@ -1,0 +1,5 @@
+# for starting usb camera
+rosrun usb_cam usb_cam_node _image_width:=1280 _image_height:=720
+
+# for starting controller node 
+rosrun joy joy_node _dev:=/dev/input/js1

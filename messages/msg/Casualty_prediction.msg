@@ -1,3 +1,9 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# Contains information regarding a prediction about a casualty
+
 int32 severe_hemorrhage
 int32 respiratory_distress
 int32 heart_rate

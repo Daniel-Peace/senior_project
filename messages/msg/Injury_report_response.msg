@@ -1,3 +1,9 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# Contains all information, as outlined by DARPA, for a injury report response
+
 string  run
 string  team
 string  user

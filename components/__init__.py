@@ -1,8 +1,12 @@
-from .TitleLabel        import TitleLabel
-from .BodyLabel         import BodyLabel
-from .List              import List
-from .VideoView         import VideoView
-from .LogWidget         import LogWidget
-from .PredictionWidget  import PredictionWidget
-from .CardWidget        import CardWidget
-from .MainWindow        import MainWindow
+# =============================================================================================
+# ADD NEW CLASSES HERE
+# =============================================================================================
+
+from .TitleLabel                import TitleLabel
+from .BodyLabel                 import BodyLabel
+from .ReportList                import ReportList
+from .ReportListWidget          import ReportListWidget
+from .VideoView                 import VideoView
+from .ReportWidget              import ReportWidget
+from .CardWidget                import CardWidget
+from .MainWindow                import MainWindow
