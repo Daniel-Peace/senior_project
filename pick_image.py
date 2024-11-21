@@ -4,9 +4,9 @@
 # CSUCI / Coordinated Robotics - DTC
 # -------------------------------------------------------------------------------------------
 # This program keeps track of the current image published to the "usb_cam/image_raw" topic.
-# When a timer_status message of true is received from the "prediction_timer_status" topic,
-# it publishes the current image to the "picked_image" topic. This is used by "yolov8.py"
-# when making predictions using the camera.
+# When a timer_status message of true is received from the "prediction_scanning_timer_state"
+# topic, it publishes the current image to the "picked_image" topic. This is used
+# by "yolov8.py" when making predictions using the camera.
 # -------------------------------------------------------------------------------------------
 
 import rospy

@@ -3,7 +3,7 @@ This project was worked on for use by Coordinated Robotics. Coordinated Robotics
 
 ![rock-crawler-drone](./photos/bullwinkle.jpg)
 
-###### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil), used under fair use.
+###### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil)
 
 
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
@@ -136,17 +136,59 @@ This program will also publish a `Response_statuses.msg` after each attempt to s
 a report. This is currently only used by the GUI to inform the user whether or not all
 reports were successfully submitted. They are published to the `/response_statuses` topic
 
-### button_press.py
-This program also contains a constant, `DEBUG`, which when set to `True` allows you to
-enter button presses using the terminal rather than using a controller. Change this
-depending on whether or not you wish to use a controller.
 
+### pick_image.py
+This program keeps track of the current image published to the `/usb_cam/image_raw` topic.
+When a `timer_status` message of `True` is received from the `/prediction_scanning_timer_state` topic,
+it publishes the current image to the `picked_image` topic.
+
+### model.py
+This class contains members and functions for holding and working with information about the
+integrated AI and ML models. When the pipeline is started, this class is used to store the
+configuration data for each model in `model_configs.json`.
+
+### finalize_predictions.py
+This program is responsible for receiving all predictions from all models and creating
+a finalized prediction about a casualty. It also receives the assigned AprilTag and
+adds this to the final prediction. To accomplish this the program waits for a prediction
+timer to start. Once a timer has started the program resets all variables and objects
+in preparation for receiving predictions and the assigned AprilTag. Anytime during the
+timer, the program can receive predictions and update each model object.
+Once the timer has ended. The model weights 2 seconds both for final predictions to come
+in, and for an apriltag to be assigned. After this, it and moves on to
+finalizing all of the predictions. Upon completing this process, it calls the
+publish_reports method on finalized_casualty which creates reports for each affliction
+type and publishes them to their respective topics.
+
+During the finalzation process this program checks the settings of each model to
+detemine which model predicts which afflictions.
+
+For all alertness affliction types there is currently only one model for each
+type. This program therefore assigns those models predictions directly to the final
+report rather than using a voting system of anykind.
+
+For affliction categories using a voting system, or a weighted average, the weights are pulled
+from `model_configs.json`
+
+If any of the afflication categories fails to find a model that made a prediction for
+said category, the model assigns whichever value would be considered "normal"
+by default. For both heart rate and respiratory rate, these values can be modified using
+the `DEFAULT_HR` and `DEFAULT_RR` constants.
+
+The timout timers length can be adjusted using the `PREDICTION_TIMEOUT` and `APRILTAG_TIMEOUT`
+constants.
+
+In the event that an AprilTag is not received, it will assign -1 to the report and leave
+it to `send_report.py` to handle.
 
 ### casualty.py
-This file contains two constants, `TEAM_NAME` and `SYSTEM`.
+This class provides members for storing all data partaining to a casualty. It also
+provides several methods for working on an instance of this class. You can change
+which system and team name is used with the reports by changing the constants `TEAM_NAME`
+and `SYSTEM` at the top of the program.
 
-`TEAM_NAME` should be set to whatever your team name is at a competition.
-This will be used when creating reports.
-
-`SYSTEM` represent a drones name and should be set to the name
-of the robot this code is running on.
+### assign_apriltag.py
+This program tracks which AprilTag is clostest to camera and publishes the tag to `/assigned_apriltag` once
+the AprilTag timer has started. Once the timer finishes, it stops publishing the Apriltag
+and resets the program for the next apriltag scan. If the timer is canceled, it will also
+reset the program. This program subscribes to `/tag_detections` which is provided by
