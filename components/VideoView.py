@@ -1,3 +1,12 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates a video feed for a usb camera. It also draws boxes around AprilTags
+# that are currently being detected.
+#
+# -------------------------------------------------------------------------------------------
+
 from PyQt5.QtCore       import Qt
 from PyQt5.QtGui        import QImage, QPixmap, QPainter, QPen
 from PyQt5.QtWidgets    import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QWidget

@@ -1,3 +1,11 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates a widget that can hold and display all information from a report
+#
+# -------------------------------------------------------------------------------------------
+
 from casualty           import Casualty
 from components         import BodyLabel, TitleLabel
 from PyQt5.QtCore       import Qt

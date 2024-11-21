@@ -1,8 +1,15 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates a label with custom styling for the body text of a widget or element
+#
+# -------------------------------------------------------------------------------------------
+
 from PyQt5.QtCore       import Qt
 from PyQt5.QtGui        import QFont
 from PyQt5.QtWidgets    import QLabel
 
-# This is a customized version of the QLabel for use as the body text of a card
 class BodyLabel(QLabel):
     # constructor
     def __init__(self, text="", parent=None):

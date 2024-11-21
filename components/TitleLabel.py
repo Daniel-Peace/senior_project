@@ -1,3 +1,11 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates custom label to be used for titles of sections and widgets
+#
+# -------------------------------------------------------------------------------------------
+
 from PyQt5.QtCore       import Qt
 from PyQt5.QtGui        import QFont
 from PyQt5.QtWidgets    import QLabel

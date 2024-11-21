@@ -1,3 +1,12 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates a report list widget using the custom list widget "ReportListWidget.py"
+# This class simply wraps that widget and addes a title and some styling.
+#
+# -------------------------------------------------------------------------------------------
+
 from PyQt5.QtWidgets    import QWidget, QVBoxLayout
 from PyQt5.QtCore       import Qt
 from components         import TitleLabel, ReportList

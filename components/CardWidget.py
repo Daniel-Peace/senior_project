@@ -1,3 +1,11 @@
+# -------------------------------------------------------------------------------------------
+# Daniel Peace
+# CSUCI / Coordinated Robotics - DTC
+# -------------------------------------------------------------------------------------------
+# This class creates a card to hold information. It uses the BodyLabel and TitleLabel
+# classes.
+#
+# -------------------------------------------------------------------------------------------
 
 from components         import TitleLabel, BodyLabel
 from PyQt5.QtCore       import Qt
