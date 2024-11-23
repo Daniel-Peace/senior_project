@@ -34,8 +34,8 @@ The following hardware is required:
 
 
 ## Getting Started:
-Before we dive into starting up the pipeline and computer vision model
-I want to give a brief description of what each node and class does, and how it may be configured:
+Before we dive into starting up the pipeline and computer vision model,
+I want to give a brief description of what each node and class does, and how it may be configured.
 
 ### yolov8.py
 This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible afflictions someone may have. It provides the options of running the model using a path provided by the
@@ -57,9 +57,9 @@ constant `CONFIDENCE_THRESHOLD`. Any predictions that have a confidence value be
 threshold will be ignored.
 
 You may choose if you would like to pass in a path to an image or have the program pull
-images from the `/picked_image` topic by using the DEBUG flag. If this is set to true, you
+images from the `/picked_image` topic by using the DEBUG flag. If this is set to `True`, you
 will have the choice to run the program with either a path to an image or using images
-published to the `/picked_image` topic. If `DEBUG` is set to false the program will run with
+published to the `/picked_image` topic. If `DEBUG` is set to `False` the program will run with
 the camera by default.
 
 Affliction types that can be predicted:
@@ -143,7 +143,7 @@ The same approach can be taken should you need to update the IP address of the s
 
 This program will also publish a `Response_statuses.msg` after each attempt to submit a
 a report. This is currently only used by the GUI to inform the user whether or not all
-reports were successfully submitted. They are published to the `/response_statuses` topic
+reports were successfully submitted. They are published to the `/response_statuses` topic.
 
 ROS topic subscriptions:
 - `/injury_report`
@@ -160,8 +160,8 @@ ROS topics for publishing
 
 ### pick_image.py
 This program keeps track of the current image published to the `/usb_cam/image_raw` topic.
-When a `timer_status.msg` message of `True` is received from the `/prediction_scanning_timer_state` topic,
-it publishes the current image to the `/picked_image` topic.
+When a `Timer_State.msg` message, received from the `/prediction_scanning_timer_state` topic,
+indicates a prediction timer has started, it publishes the current image to the `/picked_image` topic.
 
 ROS topic subscriptions:
 - `/usb_cam/image_raw`
@@ -183,20 +183,11 @@ timer to start. Once a timer has started the program resets all variables and ob
 in preparation for receiving predictions and the assigned AprilTag. Anytime during the
 timer, the program can receive predictions and update each model object.
 Once the timer has ended. The model weights 2 seconds both for final predictions to come
-in, and for an apriltag to be assigned. After this, it and moves on to
-finalizing all of the predictions. Upon completing this process, it calls the
-publish_reports method on finalized_casualty which creates reports for each affliction
-type and publishes them to their respective topics.
+in, and for an AprilTag to be assigned. After this, it and moves on to
+finalizing all of the predictions. 
 
-During the finalization process this program checks the settings of each model to
-determine which model predicts which afflictions.
-
-For all alertness affliction types there is currently only one model for each
-type. This program therefore assigns those models predictions directly to the final
-report rather than using a voting system of any kind.
-
-For affliction categories using a voting system, or a weighted average, the weights are pulled
-from `model_configs.json`
+During the finalization process this program checks the settings of each model to determine which model predicts which afflictions. For all alertness affliction types there is currently only one model for each type. This program therefore assigns those models predictions directly to the final
+report rather than using a voting system of any kind. For all other categories, a weighted average or weighted voting system is used to combine the reports. This way if there are any conflicts between models, models weighted more heavily will have more sway in the final result. The weight for each model is pulled from `model_configs.json`.
 
 If any of the affliction categories fails to find a model that made a prediction for
 said category, the model assigns whichever value would be considered "normal"
@@ -207,7 +198,11 @@ The timeout timers length can be adjusted using the `PREDICTION_TIMEOUT` and `AP
 constants.
 
 In the event that an AprilTag is not received, it will assign -1 to the report and leave
-it to `send_report.py` to handle.
+it to `send_report.py` to handle
+
+Upon completing the finalization process, this program calls the
+publish_reports method from casualty.py on finalized_casualty which creates reports for each affliction
+type and publishes them to their respective topics.
 
 ROS topic subscriptions:
 - `/prediction_scanning_timer_state`
@@ -235,7 +230,8 @@ ROS topics for publishing
 This program tracks which AprilTag is closest to camera and publishes the tag to `/assigned_apriltag` once
 the AprilTag timer has started. Once the timer finishes, it stops publishing the Apriltag
 and resets the program for the next apriltag scan. If the timer is canceled, it will also
-reset the program. This program subscribes to `/tag_detections` which is provided by
+reset the program. This program subscribes to `/tag_detections` which is provided by `apriltag_ros`.
+It provides all data required to not only get the tag ID but also it's location with respect to the camera.
 
 ROS topic subscriptions:
 - `/tag_detections`
@@ -249,7 +245,7 @@ This program handles the trigger on a controller being pressed or not. It can do
 a physical controller or through the user entering a character. The mode it runs in
 is changed with the constant `USE_CONTROLLER`. As is implied with the name, if this
 constant is set to `True`, the program will look for a controller input from the
-`/joy` topic. If set to `False`, the use can enter the character `T` to toggle the trigger
+`/joy` topic. If set to `False`, the user can enter the character `T` to toggle the trigger
 back and forth from pressed to released. The state of the trigger is published to
 `/button_status` and is used by `timer.py`
 
@@ -276,20 +272,65 @@ ROS topics for publishing
 - `/model_predictions`
 
 ### publish_test_reports.py
-This program simply publishes test reports should you want to test "send_reports.py"
+This program simply publishes test reports should you want to test `send_reports.py`.
 It allows the user to pick one of three reports to publish. The report is published
 to its corresponding topic.
 
 ROS topics for publishing
-- /critical_report
-- /vitals_report
-- /injury_report
+- `/critical_report`
+- `/vitals_report`
+- `/injury_report`
 
 ### gui.py
-This is a GUI that was created for my capstone demo. It provides a simple interface for seeing the pipeline in action. Since this was made strictly for the demo, I will not go into detail here about how it works as it is not relavent for using the pipeline on a robot.
+This is a GUI that was created for my capstone demo using PyQt5. It provides a simple interface for seeing the pipeline in action. Since this was made strictly for the demo, I will not go into detail here about how it works as it is not relevant for using the pipeline on a robot.
 
 ### apriltag_ros
 Though I did not write this package and it is not a node, there are a few things that need to be configured should you want to use this package. In `continuous_detection_robot.launch` you will need to remap some of the topics to match the topics your USB camera publishes to. Aside from that the package pretty much just works.
+
+### model_config.json
+This file is where you configure aspects of your AI and ML models that are used by `finalize_predictions.py`.
+You need to provide the name and weight of the model. You also need to define whether or not the model depends on a subject being coherent or if it determines if a model is coherent. Lastly you need to specify which afflictions the model will predict. Below is an example of two models
+
+```
+{
+    "models" : [
+        {
+            "name"                          :"Computer Vision",
+            "weight"                        :1,
+            "coherent_dependent"            :false,
+            "determines_coherency"          :false,
+            "predicts_severe_hemorrhage"    :true,
+            "predicts_respiratory_distress" :false,
+            "predicts_heart_rate"           :false,
+            "predicts_respiratory_rate"     :false,
+            "predicts_trauma_head"          :true,
+            "predicts_trauma_torso"         :true,
+            "predicts_trauma_lower_ext"     :true,
+            "predicts_trauma_upper_ext"     :true,
+            "predicts_alertness_ocular"     :false,
+            "predicts_alertness_verbal"     :false,
+            "predicts_alertness_motor"      :false
+        },
+        {
+            "name"                          :"Auditory Model",
+            "weight"                        :3,
+            "coherent_dependent"            :true,
+            "determines_coherency"          :true,
+            "predicts_severe_hemorrhage"    :true,
+            "predicts_respiratory_distress" :true,
+            "predicts_heart_rate"           :false,
+            "predicts_respiratory_rate"     :false,
+            "predicts_trauma_head"          :true,
+            "predicts_trauma_torso"         :true,
+            "predicts_trauma_lower_ext"     :true,
+            "predicts_trauma_upper_ext"     :true,
+            "predicts_alertness_ocular"     :false,
+            "predicts_alertness_verbal"     :true,
+            "predicts_alertness_motor"      :false
+        }
+    ]
+}
+```
 
 ## Running the Pipeline
 With the knowledge of how to configure each node and how all of them work, we can now look at how to actually run the pipeline. Unfortunately I have not yet made this pipeline into a package so starting it is a bit annoying.
@@ -351,4 +392,29 @@ or
 
 `./publish_test_reports.py`
 
-With that, the pipeline should be up and running and you sould be able to use the controller trigger to prompt the pipeline to move through the loop.
+With that, the pipeline should be up and running and you should be able to use the controller trigger to prompt the pipeline to move through the loop.
+
+## System Performance
+Though this competition will continue for several more years, we did get to test this pipeline out at the first of three competitions. Overall the pipeline worked great. We were able to integrate several AI and ML models and have their reports successfully combined into one final report and have this report sent off to the scoring server. There were no apparent errors or flaws for this first competition and our team was able to claim second place overall and first place among the teams not sponsored by DARPA.
+
+Though the pipeline worked great, the computer vision model I developed still has room to improve. While the approach taken seems to be valid, it appears that we did not have sufficient data for the training of the model and as such our accuracy when predicting on subjects never seen before suffered a bit. I say the approach we took seems valid and promising because when using the 80 10 10 rule for training, the model’s prediction accuracy when going through the test dataset was very high with an accuracy of 99.33%. This would seem to indicate that though the model may not be optimized yet, the approach taken could be useful in the future.
+
+## Possible Future Improvements
+As mentioned above, the Computer Vision model I developed has room to improve. I think there are several approaches that could be taken to improve its functionality. The first and easiest would be to simply increase the dataset size that it was trained on. The more casualties it has to learn from the higher chance it will have at predicting correctly on subjects it’s never seen before. Another possible approach would be to break the problem down a bit further and have the model try to identify various limbs on a subject and further analyze those limbs for injuries. These are just a couple of the many approaches that could be taken to improve and solve this aspect of the competition.
+
+As for the pipeline as a whole, while it did perform well, I think there are several places where it can be improved.
+
+- **Finalizing Predictions:** While the current method of using weighted averages and a weighted voting system seems to work, a more nuanced approach may be possible and could be worth experimenting with. This is because in many situations some injuries may indicate a high probability of a person also having another injury. Things of this nature are not currently accounted for.
+
+- **Configuration File:** Although there is some automation of adding new models to the pipeline, there is definitely still room to make it even easier. I would like to expand the configuration file to incorporate more details about a model that is being added so that the developer of that model has less work to do when implementing the system.
+
+- **Restructuring:** While the project is well-organized overall, I feel that there could be some improvements made to the overall structure of the program allowing it to become more modular and dynamic. This would be useful should future developers want to pull specific data out or plug other programs and features in. This would provide a slightly more future-proof setup.
+
+## Acknowledgments
+I want to thank the following people who greatly helped me in this project:
+
+**Professor Jason Isaacs:** Aside from answering many many questions, Professor Isaacs helped guide me as I worked through this project pointing out possible areas to consider and paths I should probably take. He was a great help in getting started in not only ROS, but the world of AI and ML.
+
+**Kevin Knoedler:** Having never worked with ROS prior to this project, Kevin was a great help and allowed me to inundate him with questions about ROS and everything robotics to learn everything I could and needed in order to complete this project.
+
+**DARPA:** Thank you to DAPRA for organizing this competition and providing data and locations for testing our robots.
