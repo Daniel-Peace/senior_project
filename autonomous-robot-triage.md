@@ -193,6 +193,8 @@ I want to thank the following people who greatly helped me in this project:
 
 - **Kevin Knoedler:** Having never worked with ROS prior to this project, Kevin was a great help and allowed me to inundate him with questions about ROS and everything robotics to learn everything I could and needed in order to complete this project.
 
+- **[DARPA:](https://www.darpa.mil/){: .custom-link}** Thank you to DAPRA for organizing this competition and providing data and locations for testing our robots.
+
 ---
 
 ##### *Click **[here](https://github.com/Daniel-Peace/senior_project){: .custom-link}** to view project repository*
