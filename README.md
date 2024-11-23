@@ -285,6 +285,12 @@ ROS topics for publishing
 - /vitals_report
 - /injury_report
 
+### gui.py
+This is a GUI that was created for my capstone demo. It provides a simple interface for seeing the pipeline in action. Since this was made strictly for the demo, I will not go into detail here about how it works as it is not relavent for using the pipeline on a robot.
+
+### apriltag_ros
+Though I did not write this package and it is not a node, there are a few things that need to be configured should you want to use this package. In `continuous_detection_robot.launch` you will need to remap some of the topics to match the topics your USB camera publishes to. Aside from that the package pretty much just works.
+
 ## Running the Pipeline
 With the knowledge of how to configure each node and how all of them work, we can now look at how to actually run the pipeline. Unfortunately I have not yet made this pipeline into a package so starting it is a bit annoying.
 Here are the steps:
@@ -345,4 +351,4 @@ or
 
 `./publish_test_reports.py`
 
-With that, the pipeline should be up and running and you could be able to use the controller trigger to prompt the pipeline to move through the loop.
+With that, the pipeline should be up and running and you sould be able to use the controller trigger to prompt the pipeline to move through the loop.
