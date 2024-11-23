@@ -19,9 +19,9 @@ Upon completing the pipeline and AI, I was able to test them at the first of thr
 Before getting started, you will want to make sure you have the following installed:
 - Ubuntu 1.20.4
 - ROS Noetic
- - May need to install [`apriltag_ros`](https://wiki.ros.org/apriltag_ros) package
- - May need to install [`usb_cam`](https://wiki.ros.org/usb_cam) package
- - May need to install [`joy`](https://wiki.ros.org/joy) package
+- May need to install [`apriltag_ros`](https://wiki.ros.org/apriltag_ros) package
+- May need to install [`usb_cam`](https://wiki.ros.org/usb_cam) package
+- May need to install [`joy`](https://wiki.ros.org/joy) package
 - Python3
 - YOLOv8 by Ultralytics
 - CUDA for NVIDIA graphics cards
@@ -32,7 +32,8 @@ The following hardware is required:
 - Webcam
 - Game controller (Xbox 360 is known to be supported)
 
-## Getting started:
+
+## Getting Started:
 Before we dive into starting up the pipeline and computer vision model
 I want to give a brief description of what each node and class does, and how it may be configured:
 
@@ -197,7 +198,6 @@ report rather than using a voting system of any kind.
 For affliction categories using a voting system, or a weighted average, the weights are pulled
 from `model_configs.json`
 
-
 If any of the affliction categories fails to find a model that made a prediction for
 said category, the model assigns whichever value would be considered "normal"
 by default. For both heart rate and respiratory rate, these values can be modified using
@@ -243,3 +243,106 @@ ROS topic subscriptions:
 
 ROS topics for publishing
 - `/assigned_apriltag`
+
+### trigger_detection.py
+This program handles the trigger on a controller being pressed or not. It can do this using
+a physical controller or through the user entering a character. The mode it runs in
+is changed with the constant `USE_CONTROLLER`. As is implied with the name, if this
+constant is set to `True`, the program will look for a controller input from the
+`/joy` topic. If set to `False`, the use can enter the character `T` to toggle the trigger
+back and forth from pressed to released. The state of the trigger is published to
+`/button_status` and is used by `timer.py`
+
+ROS topic subscriptions:
+- `/joy`
+
+ROS topics for publishing
+- `/button_status`
+
+### publish_test_predictions.py
+This program simulates multiple models making predictions about a casualty. You can
+adjust the `TIMER_BASED` constant in order to choose to run simulated predictions manually or
+have them run when the prediction timer starts.
+
+You can add more simulated predictions if you wish, you will just need to also add them to
+either the `model_predictions` list or the `handle_prediction_timerStatus()` if you wish for
+them to be used. You should also add an `elif` to the user prompt section to include any
+new choices
+
+ROS topic subscriptions:
+- `/prediction_scanning_timer_state`
+
+ROS topics for publishing
+- `/model_predictions`
+
+### publish_test_reports.py
+This program simply publishes test reports should you want to test "send_reports.py"
+It allows the user to pick one of three reports to publish. The report is published
+to its corresponding topic.
+
+ROS topics for publishing
+- /critical_report
+- /vitals_report
+- /injury_report
+
+## Running the Pipeline
+With the knowledge of how to configure each node and how all of them work, we can now look at how to actually run the pipeline. Unfortunately I have not yet made this pipeline into a package so starting it is a bit annoying.
+Here are the steps:
+
+1. First we can start the ROS master node using:
+
+`roscore`
+
+2. Next we can start the USB camera. The arguments to this command may vary depending on the camera being used:
+
+`rosrun usb_cam usb_cam_node _image_width:=1280 _image_height:=720`
+
+3. With the USB camera running we can now start the AprilTag detection node:
+
+`roslaunch apriltag `
+
+4. Next we can launch the GUI:
+
+`./gui.py`
+
+5. Now that the GUI is up and running we can start the `timer.py` program:
+
+`./timer.py`
+
+6. Now let's get the controller node running (depending on the number of devices plugged in, you may need to change js1 to something like js0 or js2):
+
+`rosrun joy joy_node _dev:=/dev/input/js1`
+
+7. With the controller visible, let's launch `trigger_detection.py`
+
+`./trigger_detection.py`
+
+8. Next let's start the `assign_apriltag.py` node:
+
+`./assign_apriltag.py`
+
+9. To start the 'finalize_predictions.py` use:
+
+`./finalize_predictions`
+
+10. To launch YOLOv8, use:
+
+`./yolov8.py`
+
+11. If you decide to use the camera to get an image for YOLOv8, then you will want to start `pick_image.py` using:
+
+`./pick_image.py`
+
+12. If you decide you want to use the test scoring server provided by DARPA you'll want to also launch `send_reports.py`:
+
+`./send_reports.py`
+
+13. if you want to either add more reports, or more predictions, you can also launch either `publish_test_predictions.py` or `publish_test_reports.py` respectively using either:
+
+`./publish_test_predictions.py`
+
+or
+
+`./publish_test_reports.py`
+
+With that, the pipeline should be up and running and you could be able to use the controller trigger to prompt the pipeline to move through the loop.
