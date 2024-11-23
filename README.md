@@ -345,7 +345,7 @@ Here are the steps:
 
 13. if you want to either add more reports, or more predictions, you can also launch either `publish_test_predictions.py` or `publish_test_reports.py` respectively using either:
 
-`./publish_test_predictions.py`
+```./publish_test_predictions.py```
 
 or
 
