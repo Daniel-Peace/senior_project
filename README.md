@@ -5,7 +5,6 @@ This project was worked on for use by Coordinated Robotics. Coordinated Robotics
 
 ###### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil)
 
-
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
 
 Alongside working on the pipeline I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
@@ -14,43 +13,41 @@ Alongside working on the pipeline I did also work on developing a computer visio
 
 Upon completing the pipeline and AI, I was able to test them at the first of three competitions for DTC last October. Though there is room for improvement, as there always is, these two technologies were rather successful and helped our team in placing second overall and first for teams not funded by DARPA.
 
-
 ## Prerequisites
 
 ### Software
-Before getting started, you will want to make sure you ahve the following installed:
+Before getting started, you will want to make sure you have the following installed:
 - Ubuntu 1.20.4
 - ROS Noetic
-  - May need to install [`apriltag_ros`](https://wiki.ros.org/apriltag_ros) package
-  - May need to install [`usb_cam`](https://wiki.ros.org/usb_cam) package
-  - May need to install [`joy`](https://wiki.ros.org/joy) package
+ - May need to install [`apriltag_ros`](https://wiki.ros.org/apriltag_ros) package
+ - May need to install [`usb_cam`](https://wiki.ros.org/usb_cam) package
+ - May need to install [`joy`](https://wiki.ros.org/joy) package
 - Python3
 - YOLOv8 by Ultralytics
-- CUDA for NVDIA graphicscards
+- CUDA for NVIDIA graphics cards
 - PyQt5 (if you wish to use the GUI)
 
 ### Hardware
-Though they are not strictly required, the following hardware is helpful should you want to use certain aspects of this project:
+The following hardware is required:
 - Webcam
 - Game controller (Xbox 360 is known to be supported)
 
 ## Getting started:
 Before we dive into starting up the pipeline and computer vision model
-I want to give a breif description of what each node and class does, and how it may be configured:
+I want to give a brief description of what each node and class does, and how it may be configured:
 
 ### yolov8.py
-This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible affliction
-someone may have. It provides the options of running the model using a path provided by the
+This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible afflictions someone may have. It provides the options of running the model using a path provided by the
 user or by using images published to the `/picked_image` topic. The results of the model
-prediction are stored in a ROS message of type `Casualty_prediction` and published to the
-`model_predictions` topic.
+prediction are stored in a ROS message of type `Casualty_prediction.msg` and published to the
+`/model_predictions` topic.
 
-The ROS message `Casualty_prediction` initializes to all 0s for all affliction values
+The ROS message `Casualty_prediction.msg` initializes to all 0s for all affliction values
 With that, when the model can make predictions about an affliction but
 does not, it should be assumed that the casualty does not have that
 specific affliction and the field in the ROS message should be left as zero.
 
-The model pulls the weights from a folder in the src directory named `weights`.
+The model pulls the weights from a folder in the `code` directory named `weights`.
 You can change the weights being used by changing the `WEIGHTS` constant to a path of
 your choosing.
 
@@ -87,7 +84,7 @@ It cycles through the following timers:
 - A countdown timer for when you are about to scan for afflictions
 - A timer for scanning for afflictions
 
-It publishing `Timer_state` ROS messages, which contain a timer's current status along with
+It publishes `Timer_state.msg` ROS messages, which contain a timer's current status along with
 the amount of time left, to:
 - `/apriltag_countdown_timer_state`
 - `/apriltag_scanning_timer_state`
@@ -95,7 +92,7 @@ the amount of time left, to:
 - `/prediction_scanning_timer_state`
 
 It triggers these timers by detecting if a trigger on a controller is not being pressed.
-It receives info about the triggers state from the `/button_status` topic.
+It receives info about the trigger’s state from the `/button_status` topic.
 
 The length of the timers can be changed using the following constants:
 - `BUTTON_TIMER_LENGTH`
@@ -106,6 +103,17 @@ You will notice a few additional topics that this program publishes to. These ar
 by the GUI to allow some of its elements to update. These topics include:
 - `/current_timer` (used to indicate which timer is active)
 - `/loop_state` (used to determine which part of the pipeline loop we are in)
+
+ROS topic subscriptions:
+- `/apriltag_countdown_timer_state`
+- `/apriltag_scanning_timer_state`
+- `/prediction_countdown_timer_state`
+- `/prediction_scanning_timer_state`
+- `/button_status`
+
+ROS topics for publishing
+- `/current_timer`
+- `/loop_state`
 
 ### send_report.py
 This program is responsible for submitting a finalized prediction to the scoring
@@ -136,11 +144,30 @@ This program will also publish a `Response_statuses.msg` after each attempt to s
 a report. This is currently only used by the GUI to inform the user whether or not all
 reports were successfully submitted. They are published to the `/response_statuses` topic
 
+ROS topic subscriptions:
+- `/injury_report`
+- `/critical_report`
+- `/vitals_report`
+- `/button_status`
+
+ROS topics for publishing
+- `/critical_response`
+- `/vitals_response`
+- `/injury_response`
+- `/status`
+- `/response_statuses`
 
 ### pick_image.py
 This program keeps track of the current image published to the `/usb_cam/image_raw` topic.
-When a `timer_status` message of `True` is received from the `/prediction_scanning_timer_state` topic,
-it publishes the current image to the `picked_image` topic.
+When a `timer_status.msg` message of `True` is received from the `/prediction_scanning_timer_state` topic,
+it publishes the current image to the `/picked_image` topic.
+
+ROS topic subscriptions:
+- `/usb_cam/image_raw`
+- `/prediction_scanning_timer_state`
+
+ROS topics for publishing
+- `/picked_image`
 
 ### model.py
 This class contains members and functions for holding and working with information about the
@@ -160,35 +187,59 @@ finalizing all of the predictions. Upon completing this process, it calls the
 publish_reports method on finalized_casualty which creates reports for each affliction
 type and publishes them to their respective topics.
 
-During the finalzation process this program checks the settings of each model to
-detemine which model predicts which afflictions.
+During the finalization process this program checks the settings of each model to
+determine which model predicts which afflictions.
 
 For all alertness affliction types there is currently only one model for each
 type. This program therefore assigns those models predictions directly to the final
-report rather than using a voting system of anykind.
+report rather than using a voting system of any kind.
 
 For affliction categories using a voting system, or a weighted average, the weights are pulled
 from `model_configs.json`
 
-If any of the afflication categories fails to find a model that made a prediction for
+
+If any of the affliction categories fails to find a model that made a prediction for
 said category, the model assigns whichever value would be considered "normal"
 by default. For both heart rate and respiratory rate, these values can be modified using
 the `DEFAULT_HR` and `DEFAULT_RR` constants.
 
-The timout timers length can be adjusted using the `PREDICTION_TIMEOUT` and `APRILTAG_TIMEOUT`
+The timeout timers length can be adjusted using the `PREDICTION_TIMEOUT` and `APRILTAG_TIMEOUT`
 constants.
 
 In the event that an AprilTag is not received, it will assign -1 to the report and leave
 it to `send_report.py` to handle.
 
+ROS topic subscriptions:
+- `/prediction_scanning_timer_state`
+- `/apriltag_scanning_timer_state`
+- `/assigned_apriltag`
+- `/model_predictions`
+
+ROS topics for publishing
+- `/final_report`
+- `/model_prediction_statuses`
+- `/loop_state`
+
 ### casualty.py
-This class provides members for storing all data partaining to a casualty. It also
+This class provides members for storing all data pertaining to a casualty. It also
 provides several methods for working on an instance of this class. You can change
 which system and team name is used with the reports by changing the constants `TEAM_NAME`
 and `SYSTEM` at the top of the program.
 
+ROS topics for publishing
+- `/critical_report`
+- `/vitals_report`
+- `/injury_report`
+
 ### assign_apriltag.py
-This program tracks which AprilTag is clostest to camera and publishes the tag to `/assigned_apriltag` once
+This program tracks which AprilTag is closest to camera and publishes the tag to `/assigned_apriltag` once
 the AprilTag timer has started. Once the timer finishes, it stops publishing the Apriltag
 and resets the program for the next apriltag scan. If the timer is canceled, it will also
 reset the program. This program subscribes to `/tag_detections` which is provided by
+
+ROS topic subscriptions:
+- `/tag_detections`
+- `/apriltag_scanning_timer_state`
+
+ROS topics for publishing
+- `/assigned_apriltag`
