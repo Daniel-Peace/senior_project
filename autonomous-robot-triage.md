@@ -1,7 +1,7 @@
 ---
 layout: page
-title: DTC Prediction Pipeline
-permalink: /projects/capstone/
+title: Autonomous Robot Triage
+permalink: /projects/autonomous-robot-triage/
 ---
 
 <style>
@@ -23,6 +23,8 @@ a.custom-link:hover {
 This project was worked on for use by Coordinated Robotics. Coordinated Robotics is a robotics team that works with students from CSUCI and is currently competing in DARPA's latest competition. This competition, DTC (DARPA Triage Challenge), is focused on the development of autonomous drones that can perform triage to assist first responders in mass casualty situations. The goal is to use drones to provide data to first responders that will help them assess the situation and determine how best to approach it to save the most lives.
 
 <img src="/senior_project/images/bullwinkle.jpg" alt="bullwinkle" style="display: block; margin: 0 auto;border-radius: 10px;">
+
+###### Image from [DARPA TRIAGE CHALLENGE](https://triagechallenge.darpa.mil)
 
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
 
@@ -65,7 +67,7 @@ The following cycle is the solution we arrived at:
 1. **Publishing Reports** - Once a finalized report is created, the report is submitted to a HTTP server for review.
 
 ### Programmatic Implementation
-With the overall approach determined, we can now look to implement this with actual code. To do this, the tasks required to complete each step of the program loop, were broken up into separate scripts and programs, and connected using ROS's messaging system. The end result is the following structure:
+With the overall approach determined, we can now look to implement this with actual code. To do this, the tasks required to complete each step of the program loop were broken up into separate scripts and programs, and connected using ROS's messaging system. The end result is the following structure:
 
 <img src="/senior_project/images/program_structure.png" alt="program-loop" style="border-radius: 10px;">
 
@@ -106,9 +108,9 @@ The nodes labeled Model 0 - 3 represent the various AI and ML models that make p
 Each of these categories is then assigned an integer value to represent whether or not a casualty has a specific affliction and to what degree. To help consolidate all of these possible affliction values, models store their predictions in a custom class `casualty.py` which contains all relevant information about a casualty. Since some models will only be able to predict certain types of afflictions, they may assign -1 to any of the categories to inform `finalize_predictions.py` to skip that field for that model when creating the final report. All models should also subscribe to the `/prediction_timer_status` topic so that they can be informed when a prediction timer has started.
 
 #### YOLOv8
-Though the primary focus of this project was on creating the pipeline, I did also work on creating one of the above-mentioned models which focused on injury detection through computer vision using YOLOv8. 
+Though the primary focus of this project was on creating the pipeline, I did also work on creating one of the above-mentioned models which focused on injury detection through computer vision using YOLOv8.
 
-YOLOv8 is a convolutional neural network geared towards computer vision and object detection. Though there are pretrained weights that can be used for detecting various types of objects, triage tends to have less data available. With that, a custom dataset was created using provided videos from DARPA as well as data collected at a practice competition hosted in Georgia. The data provided and collected then needed to be broken up into images and cleaned up, keeping only the useful images. 
+YOLOv8 is a convolutional neural network geared towards computer vision and object detection. Though there are pretrained weights that can be used for detecting various types of objects, triage tends to have less data available. With that, a custom dataset was created using provided videos from DARPA as well as data collected at a practice competition hosted in Georgia. The data provided and collected then needed to be broken up into images and cleaned up, keeping only the useful images.
 
 Next, each image needed to be labeled so that YOLOv8 could be trained and identify what injury or affliction it should be finding in an image. Once this was done, the model could actually be trained on the data which results in a weight file that can be used for making predictions on future images.
 
@@ -149,7 +151,7 @@ After going through each model for each category, the `publish_reports()` functi
 From here `send_reports.py` takes over.
 
 #### Send Reports
-After assigning an AprilTag and making and finalizing predictions about a casualty, we need to actually send it to a server to be reviewed. This is accomplished by `send_reports.py`. For the competition, the server of interest is the scoring server where DARPA team members will review your submission and score you based on how accurately you predicted the casualties afflictions. In a real world situation, this server would most likely represent a base station of some kind where first responders could view the data sent by the robots and choose how best to respond. Either way, the process will be nearly the same. 
+After assigning an AprilTag and making and finalizing predictions about a casualty, we need to actually send it to a server to be reviewed. This is accomplished by `send_reports.py`. For the competition, the server of interest is the scoring server where DARPA team members will review your submission and score you based on how accurately you predicted the casualties afflictions. In a real world situation, this server would most likely represent a base station of some kind where first responders could view the data sent by the robots and choose how best to respond. Either way, the process will be nearly the same.
 
 This program subscribes to the following topics to receive reports about a casualty:
 
@@ -166,7 +168,7 @@ After receiving a report it can convert that data to a JSON format to be attache
 This information can be used by a GUI to inform the operators if the report was successfully sent and received.
 
 ### System Performance
-Though this competition will continue for several more years, we did get to test this pipeline out at the first of three competitions. Overall the pipeline worked great. We were able to integrate several AI and ML models and have their reports successfully combined into one final report and have this report sent off to the scoring server. There were no apparent errors or flaws for this first competition and our team was able to claim second place overall and first place among the teams not sponsored by DARPA. 
+Though this competition will continue for several more years, we did get to test this pipeline out at the first of three competitions. Overall the pipeline worked great. We were able to integrate several AI and ML models and have their reports successfully combined into one final report and have this report sent off to the scoring server. There were no apparent errors or flaws for this first competition and our team was able to claim second place overall and first place among the teams not sponsored by DARPA.
 
 Though the pipeline worked great, the computer vision model I developed still has room to improve. While the approach taken seems to be valid, it appears that we did not have sufficient data for the training of the model and as such our accuracy when predicting on subjects never seen before suffered a bit. I say the approach we took seems valid and promising because when using the 80 10 10 rule for training, the model's prediction accuracy when going through the test dataset was very high with an accuracy of 99.33%. This would seem to indicate that though the model may not be optimized yet, the approach taken could be useful in the future.
 
@@ -177,7 +179,10 @@ As for the pipeline as a whole, while it did perform well, I think there are sev
 
 - **Finalizing Predictions:** While the current method of using weighted averages and a weighted voting system seems to work, a more nuanced approach may be possible and could be worth experimenting with. This is because in many situations some injuries may indicate a high probability of a person also having another injury. Things of this nature are not currently accounted for.
 
-- **Configuration File:** Although there is some automation of adding new models to the pipeline, there is definitely still room to make it even easier. I would like to expand the configuration file to incorporate more details about a model that is being added so that the developer of that model has less work to do when implementing the system. Currently it is on the developer to indicate programmatically which afflictions their model will attempt to predict. This is something that could be added to the configuration file to remove that work for the developer. This way it would just be a few lines in a JSON file to define a model and what `finalize_predictions.py` should expect to recieve from that model.
+- **Configuration File:** Although there is some automation of adding new models to the pipeline,
+there is definitely still room to make it even easier. I would like to expand the configuration
+file to incorporate more details about a model that is being added so that the developer of that
+model has less work to do when implementing the system.
 
 - **Restructuring:** While the project is well-organized overall, I feel that there could be some improvements made to the overall structure of the program allowing it to become more modular and dynamic. This would be useful should future developers want to pull specific data out or plug other programs and features in. This would provide a slightly more future-proof setup.
 

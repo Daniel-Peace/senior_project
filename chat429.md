@@ -31,4 +31,9 @@ permalink: /projects/chat429/
 
 
 ## Overview
-This project, developed in Go, uses TCP sockets to create a Discord-like program that allows users to connect to a server where they can join various text chats and talk to friends. it provides a framework similar to Discord in that there is an admin that can give roles to users and create and delete channels.
+This project, developed in Go, uses TCP sockets to create a Discord-like program that
+allows users to connect to a server where they can join various text chats and talk to
+friends. it provides a framework similar to Discord in that there is an admin that can
+give roles to users and create and delete channels.
+
+*More information to be added soon!*
