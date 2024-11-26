@@ -3,3 +3,10 @@ rosrun usb_cam usb_cam_node _image_width:=1280 _image_height:=720
 
 # for starting controller node 
 rosrun joy joy_node _dev:=/dev/input/js1
+
+# for launcing the AprilTag detection node
+roslaunch apriltag_ros continuous_detection.launch
+
+# for test scoring server
+sudo docker compose up
+sudo docker compose down
