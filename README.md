@@ -7,7 +7,7 @@ This project was worked on for use by Coordinated Robotics. Coordinated Robotics
 
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
 
-Alongside working on the pipeline I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
+Alongside working on the pipeline, I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
 
 ![team-photo](./photos/team_photo.jpg)
 
@@ -39,7 +39,7 @@ I want to give a brief description of what each node and class does, and how it 
 
 ### yolov8.py
 This program implements [Ultralytics' YOLOv8](https://docs.ultralytics.com/models/yolov8/) to make predictions about possible afflictions someone may have. It provides the options of running the model using a path provided by the
-user or by using images published to the `/picked_image` topic. The results of the model
+user, or by using images published to the `/picked_image` topic. The results of the model
 prediction are stored in a ROS message of type `Casualty_prediction.msg` and published to the
 `/model_predictions` topic.
 
@@ -120,13 +120,13 @@ ROS topics for publishing
 This program is responsible for submitting a finalized prediction to the scoring
 server using API endpoints provided by DARPA. It creates callback functions for
 each report type and submits all ROS messages received from those topics to their
-corresponding endpoint.
+corresponding endpoints.
 These callback functions check the following topics for reports:
 - `/injury_report`
 - `/critical_report`
 - `/vitals_report`
 
-It also periodically sends a request
+This program also periodically sends a request
 for a status update. The responses from each HTTP request is published to a corresponding
 ROS topic:
 - `/critical_response`
@@ -173,7 +173,7 @@ ROS topics for publishing
 ### model.py
 This class contains members and functions for holding and working with information about the
 integrated AI and ML models. When the pipeline is started, this class is used to store the
-configuration data for each model in `model_configs.json`.
+configuration data for each model from `model_configs.json`.
 
 ### finalize_predictions.py
 This program is responsible for receiving all predictions from all models and creating
@@ -230,7 +230,7 @@ ROS topics for publishing
 This program tracks which AprilTag is closest to camera and publishes the tag to `/assigned_apriltag` once
 the AprilTag timer has started. Once the timer finishes, it stops publishing the Apriltag
 and resets the program for the next apriltag scan. If the timer is canceled, it will also
-reset the program. This program subscribes to `/tag_detections` which is provided by `apriltag_ros`.
+reset the program. This program subscribes to `/tag_detections`, which is provided by `apriltag_ros`.
 It provides all data required to not only get the tag ID but also it's location with respect to the camera.
 
 ROS topic subscriptions:
@@ -242,7 +242,7 @@ ROS topics for publishing
 
 ### trigger_detection.py
 This program handles the trigger on a controller being pressed or not. It can do this using
-a physical controller or through the user entering a character. The mode it runs in
+a physical controller, or through the user entering a character. The mode it runs in
 is changed with the constant `USE_CONTROLLER`. As is implied with the name, if this
 constant is set to `True`, the program will look for a controller input from the
 `/joy` topic. If set to `False`, the user can enter the character `T` to toggle the trigger
