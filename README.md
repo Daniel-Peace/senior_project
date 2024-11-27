@@ -7,7 +7,7 @@ This project was worked on for use by Coordinated Robotics. Coordinated Robotics
 
 With that in mind, this project focused on integrating AI and ML models and creating a pipeline for making predictions about a casualty, combining multiple predictions into one report, and submitting this report to a server to be reviewed. To implement this pipeline, the tasks mentioned above were broken up further into sub-tasks that could then be implemented using Python. To allow all of these separate programs to communicate, I used ROS's messaging system to perform IPC. The end result is a pipeline that allows other developers to easily integrate new ML and AI models into the pipeline, and have them automatically used in finalizing a report about a casualty with minimal configuration needed from the developer.
 
-Alongside working on the pipeline, I did also work on developing a computer vision model using YoloV8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YoloV8 to make predictions on various injuries such as an injured arm or leg to name a couple.
+Alongside working on the pipeline, I did also work on developing a computer vision model using YOLOv8 by Ultralytics. To accomplish this, a custom dataset was created from data gathered at a test competition along with some data provided by DARPA. This dataset could then be used to train YOLOv8 to make predictions on various injuries such as an injured arm or leg to name a couple.
 
 ![team-photo](./photos/team_photo.jpg)
 
@@ -43,7 +43,7 @@ user, or by using images published to the `/picked_image` topic. The results of 
 prediction are stored in a ROS message of type `Casualty_prediction.msg` and published to the
 `/model_predictions` topic.
 
-The ROS message `Casualty_prediction.msg` initializes to all 0s for all affliction values
+The ROS message `Casualty_prediction.msg` initializes to all 0s for all affliction values.
 With that, when the model can make predictions about an affliction but
 does not, it should be assumed that the casualty does not have that
 specific affliction and the field in the ROS message should be left as zero.
@@ -57,7 +57,7 @@ constant `CONFIDENCE_THRESHOLD`. Any predictions that have a confidence value be
 threshold will be ignored.
 
 You may choose if you would like to pass in a path to an image or have the program pull
-images from the `/picked_image` topic by using the DEBUG flag. If this is set to `True`, you
+images from the `/picked_image` topic by using the `DEBUG` flag. If this is set to `True`, you
 will have the choice to run the program with either a path to an image or using images
 published to the `/picked_image` topic. If `DEBUG` is set to `False` the program will run with
 the camera by default.
@@ -127,8 +127,8 @@ These callback functions check the following topics for reports:
 - `/vitals_report`
 
 This program also periodically sends a request
-for a status update. The responses from each HTTP request is published to a corresponding
-ROS topic:
+for a status update. The responses from the status request along with all other HTTP requests are published to their corresponding
+ROS topics:
 - `/critical_response`
 - `/vitals_response`
 - `/injury_response`
@@ -346,7 +346,7 @@ Here are the steps:
 
 3. With the USB camera running we can now start the AprilTag detection node:
 
-`roslaunch apriltag `
+`oslaunch apriltag_ros continuous_detection.launch`
 
 4. Next we can launch the GUI:
 
@@ -356,7 +356,7 @@ Here are the steps:
 
 `./timer.py`
 
-6. Now let's get the controller node running (depending on the number of devices plugged in, you may need to change js1 to something like js0 or js2):
+6. Now let's get the controller node running (depending on the number of devices plugged in, you may need to change `js1` to something like `js0` or `js2`):
 
 `rosrun joy joy_node _dev:=/dev/input/js1`
 
@@ -368,7 +368,7 @@ Here are the steps:
 
 `./assign_apriltag.py`
 
-9. To start the 'finalize_predictions.py` use:
+9. To start the `finalize_predictions.py` use:
 
 `./finalize_predictions`
 
@@ -384,8 +384,7 @@ Here are the steps:
 
 `./send_reports.py`
 
-*If you wish to actaully test the reports being submitted to a server, you will also want to launch the test scoring server provided by DARPA.
-A zip file has been included in the `test_scoring_server` directory. In contains instructions on how to use it.*
+*A zip file has been included in the `test_scoring_server` directory that contains the scoring server. It contains instructions on how to use it as well.*
 
 13. if you want to either add more reports, or more predictions, you can also launch either `publish_test_predictions.py` or `publish_test_reports.py` respectively using either:
 
