@@ -384,6 +384,9 @@ Here are the steps:
 
 `./send_reports.py`
 
+*If you wish to actaully test the reports being submitted to a server, you will also want to launch the test scoring server provided by DARPA.
+A zip file has been included in the `test_scoring_server` directory. In contains instructions on how to use it.*
+
 13. if you want to either add more reports, or more predictions, you can also launch either `publish_test_predictions.py` or `publish_test_reports.py` respectively using either:
 
 `./publish_test_predictions.py`
